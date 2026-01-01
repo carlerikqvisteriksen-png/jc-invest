@@ -1,22 +1,41 @@
-import React from 'react';
-import { LineChart, MapPin, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Search, Bell } from 'lucide-react';
 import ValueEstimateCards from './ValueEstimateCards';
 import RentalPrices from './RentalPrices';
 import ScoreCards from './ScoreCards';
+import PropertyCarousel from './PropertyCarousel';
+import ComparableTable from './ComparableTable';
+import NotificationPanel, { NotificationBell } from './NotificationPanel';
 
 export default function Market() {
+    const [showNotifications, setShowNotifications] = useState(false);
+
     return (
         <div className="w-full max-w-6xl mx-auto px-4 py-8 fade-in">
 
-            {/* Header */}
-            <div className="text-center mb-8">
-                <h2 className="text-3xl md:text-4xl font-serif text-brass mb-2">Markedsanalyse</h2>
-                <p className="text-stone-light text-sm max-w-md mx-auto">
-                    Utforsk verdiestimat, leiepriser og markedsdata for eiendomsinvesteringer.
-                </p>
+            {/* Header with notification bell */}
+            <div className="flex items-center justify-between mb-8">
+                <div className="text-center flex-1">
+                    <h2 className="text-3xl md:text-4xl font-serif text-brass mb-2">Markedsanalyse</h2>
+                    <p className="text-stone-light text-sm max-w-md mx-auto">
+                        Utforsk verdiestimat, leiepriser og markedsdata for eiendomsinvesteringer.
+                    </p>
+                </div>
+
+                {/* Notification Bell */}
+                <div className="relative">
+                    <NotificationBell
+                        count={2}
+                        onClick={() => setShowNotifications(!showNotifications)}
+                    />
+                    <NotificationPanel
+                        isOpen={showNotifications}
+                        onClose={() => setShowNotifications(false)}
+                    />
+                </div>
             </div>
 
-            {/* Search Bar (placeholder for future) */}
+            {/* Search Bar */}
             <div className="relative mb-8 max-w-2xl mx-auto">
                 <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-brass/20 to-blue-500/20 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
@@ -33,6 +52,9 @@ export default function Market() {
                     </div>
                 </div>
             </div>
+
+            {/* Property Carousel - Kuppeliste */}
+            <PropertyCarousel />
 
             {/* Demo Property Info */}
             <div className="velvet-card p-4 mb-6 flex items-center gap-4">
@@ -66,7 +88,7 @@ export default function Market() {
             <ValueEstimateCards />
 
             {/* Two column layout for desktop */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Score Cards */}
                 <ScoreCards />
 
@@ -74,14 +96,8 @@ export default function Market() {
                 <RentalPrices />
             </div>
 
-            {/* Coming Soon Section */}
-            <div className="mt-8 p-6 rounded-lg border border-dashed border-white/20 text-center">
-                <LineChart className="w-8 h-8 mx-auto text-stone-600 mb-3" />
-                <h4 className="text-stone-400 font-medium mb-1">Flere funksjoner kommer snart</h4>
-                <p className="text-stone-600 text-sm">
-                    Sammenlignbare salg, kuppeliste, utleiekalkulator og mer...
-                </p>
-            </div>
+            {/* Comparable Sales Table */}
+            <ComparableTable />
         </div>
     );
 }
