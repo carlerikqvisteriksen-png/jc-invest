@@ -1,55 +1,22 @@
-import React, { useState } from 'react';
-import { Bell, X, Check, Tag, Home, DollarSign, AlertCircle, Clock, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bell, X, Check, Tag, Home, DollarSign, AlertCircle, Clock, ChevronRight, Loader2 } from 'lucide-react';
+import { getNotifications, getUnreadNotificationCount, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../lib/database';
 
-// Mock notifications - replace with real data later
-const mockNotifications = [
-    {
-        id: 1,
-        type: 'new_listing',
-        title: 'Ny salgsannonse registrert!',
-        address: 'Tennisveien 10B, 3063 STEINBERG',
-        price: 3690000,
-        time: '4 timer siden',
-        read: false
-    },
-    {
-        id: 2,
-        type: 'sold',
-        title: 'Annonsen har blitt markert som solgt',
-        address: 'Skippergata 20B, 0152 OSLO',
-        time: '5 timer siden',
-        read: false
-    },
-    {
-        id: 3,
-        type: 'inactive',
-        title: 'Annonsen er inaktiv',
-        address: 'Sørgenfrgate 6B, 0367 OSLO',
-        time: '11 timer siden',
-        read: true
-    },
-    {
-        id: 4,
-        type: 'price_change',
-        title: 'Prisendring',
-        address: 'Langerekka 12, 5262 ARNATVEIT',
-        oldPrice: 4500000,
-        price: 4150000,
-        time: '24 timer siden',
-        read: true
-    },
-    {
-        id: 5,
-        type: 'transaction',
-        title: 'Markedstransaksjon registrert',
-        address: 'Langerekka 12, 5262 ARNATVEIT',
-        price: 4150000,
-        time: '25 timer siden',
-        read: true
-    }
-];
+const formatPrice = (num) => num ? new Intl.NumberFormat('nb-NO').format(num) : '';
 
-const formatPrice = (num) => new Intl.NumberFormat('nb-NO').format(num);
+function formatTimeAgo(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Nettopp';
+    if (diffHours < 24) return `${diffHours} timer siden`;
+    if (diffDays === 1) return '1 dag siden';
+    return `${diffDays} dager siden`;
+}
 
 const NotificationIcon = ({ type }) => {
     switch (type) {
@@ -70,18 +37,16 @@ const NotificationIcon = ({ type }) => {
 
 function NotificationItem({ notification, onMarkRead, onDismiss }) {
     return (
-        <div className={`flex items-start gap-3 p-4 border-b border-white/5 hover:bg-white/5 transition-colors ${!notification.read ? 'bg-brass/5' : ''
+        <div className={`flex items-start gap-3 p-4 border-b border-white/5 hover:bg-white/5 transition-colors ${!notification.is_read ? 'bg-brass/5' : ''
             }`}>
-            {/* Icon */}
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${!notification.read ? 'bg-brass/20' : 'bg-white/10'
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${!notification.is_read ? 'bg-brass/20' : 'bg-white/10'
                 }`}>
                 <NotificationIcon type={notification.type} />
             </div>
 
-            {/* Content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                    <h4 className={`text-sm ${!notification.read ? 'text-ink-primary font-medium' : 'text-stone-300'}`}>
+                    <h4 className={`text-sm ${!notification.is_read ? 'text-ink-primary font-medium' : 'text-stone-300'}`}>
                         {notification.title}
                     </h4>
                     <button
@@ -91,31 +56,30 @@ function NotificationItem({ notification, onMarkRead, onDismiss }) {
                         <X className="w-4 h-4" />
                     </button>
                 </div>
-                <p className="text-xs text-stone-500 mt-0.5 truncate">{notification.address}</p>
+                {notification.property_address && (
+                    <p className="text-xs text-stone-500 mt-0.5 truncate">{notification.property_address}</p>
+                )}
 
-                {/* Price info */}
-                {notification.price && (
+                {notification.new_price && (
                     <div className="flex items-center gap-2 mt-1">
-                        {notification.oldPrice && (
+                        {notification.old_price && (
                             <span className="text-xs text-stone-600 line-through">
-                                NOK {formatPrice(notification.oldPrice)}
+                                NOK {formatPrice(notification.old_price)}
                             </span>
                         )}
                         <span className={`text-xs ${notification.type === 'price_change' ? 'text-green-400' : 'text-brass'}`}>
-                            NOK {formatPrice(notification.price)}
+                            NOK {formatPrice(notification.new_price)}
                         </span>
                     </div>
                 )}
 
-                {/* Time */}
                 <div className="flex items-center gap-1 mt-2 text-[10px] text-stone-600">
                     <Clock className="w-3 h-3" />
-                    {notification.time}
+                    {formatTimeAgo(notification.created_at)}
                 </div>
             </div>
 
-            {/* Unread indicator */}
-            {!notification.read && (
+            {!notification.is_read && (
                 <button
                     onClick={() => onMarkRead(notification.id)}
                     className="w-2 h-2 rounded-full bg-brass shrink-0 mt-2"
@@ -127,34 +91,69 @@ function NotificationItem({ notification, onMarkRead, onDismiss }) {
 }
 
 export default function NotificationPanel({
-    notifications = mockNotifications,
     isOpen = false,
     onClose = () => { },
     showAsDropdown = true
 }) {
-    const [items, setItems] = useState(notifications);
+    const [items, setItems] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const unreadCount = items.filter(n => !n.read).length;
+    const unreadCount = items.filter(n => !n.is_read).length;
 
-    const markRead = (id) => {
-        setItems(prev => prev.map(n =>
-            n.id === id ? { ...n, read: true } : n
-        ));
+    useEffect(() => {
+        if (isOpen || !showAsDropdown) {
+            loadNotifications();
+        }
+    }, [isOpen, showAsDropdown]);
+
+    const loadNotifications = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const data = await getNotifications();
+            setItems(data);
+        } catch (err) {
+            console.error('Error loading notifications:', err);
+            setError('Kunne ikke laste varslinger');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const markAllRead = () => {
-        setItems(prev => prev.map(n => ({ ...n, read: true })));
+    const markRead = async (id) => {
+        try {
+            await markNotificationAsRead(id);
+            setItems(prev => prev.map(n =>
+                n.id === id ? { ...n, is_read: true } : n
+            ));
+        } catch (err) {
+            console.error('Error marking notification as read:', err);
+        }
     };
 
-    const dismiss = (id) => {
-        setItems(prev => prev.filter(n => n.id !== id));
+    const markAllRead = async () => {
+        try {
+            await markAllNotificationsAsRead();
+            setItems(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch (err) {
+            console.error('Error marking all as read:', err);
+        }
+    };
+
+    const dismiss = async (id) => {
+        try {
+            await deleteNotification(id);
+            setItems(prev => prev.filter(n => n.id !== id));
+        } catch (err) {
+            console.error('Error deleting notification:', err);
+        }
     };
 
     if (showAsDropdown && !isOpen) return null;
 
     const content = (
         <>
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
                     <Bell className="w-5 h-5 text-brass" />
@@ -182,9 +181,19 @@ export default function NotificationPanel({
                 </div>
             </div>
 
-            {/* Notifications list */}
             <div className="max-h-[400px] overflow-y-auto">
-                {items.length === 0 ? (
+                {isLoading ? (
+                    <div className="p-8 flex justify-center">
+                        <Loader2 className="w-6 h-6 text-brass animate-spin" />
+                    </div>
+                ) : error ? (
+                    <div className="p-8 text-center text-red-400">
+                        <p>{error}</p>
+                        <button onClick={loadNotifications} className="mt-2 text-brass hover:underline text-sm">
+                            Prøv igjen
+                        </button>
+                    </div>
+                ) : items.length === 0 ? (
                     <div className="p-8 text-center text-stone-500">
                         <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>Ingen varslinger</p>
@@ -201,7 +210,6 @@ export default function NotificationPanel({
                 )}
             </div>
 
-            {/* Footer */}
             {items.length > 0 && (
                 <div className="p-3 border-t border-white/10">
                     <button className="w-full text-center text-xs text-stone-500 hover:text-brass transition-colors flex items-center justify-center gap-1">
@@ -228,8 +236,21 @@ export default function NotificationPanel({
     );
 }
 
-// Bell button with badge for use in header
-export function NotificationBell({ count = 0, onClick }) {
+export function NotificationBell({ onClick }) {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        loadCount();
+        // Refresh count every 30 seconds
+        const interval = setInterval(loadCount, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const loadCount = async () => {
+        const unread = await getUnreadNotificationCount();
+        setCount(unread);
+    };
+
     return (
         <button
             onClick={onClick}
