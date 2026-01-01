@@ -27,7 +27,7 @@
                     ]
                 },
                 "options": {
-                    "systemMessage": "Du er en erfaren norsk advokat spesialisert på eiendomsrett. Vær konservativ og påpek risiko. Referer til norsk lov der relevant."
+                    "systemMessage": "Du er en erfaren norsk advokat spesialisert på eiendomsrett. VÆR KORT OG KONSIS. Gi kun de viktigste juridiske risikoene og rådene (maks 3-5 punkter). Ikke forklar grunnleggende ting som dokumentavgift eller standard kjøpsprosesser - brukeren kjenner disse. Fokuser på spesifikke juridiske feller eller muligheter knyttet til spørsmålet."
                 }
             },
             "id": "advokat-node",
@@ -56,7 +56,7 @@
                     ]
                 },
                 "options": {
-                    "systemMessage": "Du er en erfaren eiendomsmegler i Norge. Fokuser på markedsmuligheter og forhandlingstaktikk."
+                    "systemMessage": "Du er en erfaren eiendomsmegler i Norge. VÆR KORT OG KONSIS. Brukeren er selv bruktboligmegler, så IKKE foreslå at de skal kontakte en megler. Fokuser på markedsmuligheter, lokal pristrend og konkrete forhandlingstips (maks 3-5 punkter). Hopp over generelle råd om visning, finansiering etc."
                 }
             },
             "id": "megler-node",
