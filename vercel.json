@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/council",
+            "destination": "https://ceqe.app.n8n.cloud/webhook/council-question"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2 } from 'lucide-react';
 
-const WEBHOOK_URL = "https://ceqe.app.n8n.cloud/webhook/council-question";
+const WEBHOOK_URL = "/api/council";
 
 export default function Council() {
     const [messages, setMessages] = useState([
