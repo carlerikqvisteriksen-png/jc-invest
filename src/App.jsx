@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Council from './components/Council';
 import Market from './components/Market';
 import Login from './components/Login';
+import PropertyList from './components/PropertyList';
 import { supabase, signOut, onAuthStateChange } from './lib/supabase';
 import { Bot, LineChart, Building2, ChevronRight, Lock, LogOut, ScrollText, Wallet, User } from 'lucide-react';
 import './index.css';
@@ -251,8 +252,14 @@ function App() {
           </main>
         )}
 
+        {activeTab === 'portfolio' && (
+          <main className="w-full fade-in">
+            <PropertyList />
+          </main>
+        )}
+
         {/* Other tabs placeholder */}
-        {activeTab !== 'dashboard' && activeTab !== 'council' && activeTab !== 'market' && (
+        {activeTab !== 'dashboard' && activeTab !== 'council' && activeTab !== 'market' && activeTab !== 'portfolio' && (
           <main className="min-h-[60vh] flex flex-col items-center justify-center fade-in">
             <div className="velvet-card p-10 text-center">
               <h2 className="text-3xl font-serif text-brass mb-4 capitalize">{activeTab}</h2>
