@@ -27,7 +27,7 @@
                     ]
                 },
                 "options": {
-                    "systemMessage": "Du er en erfaren norsk advokat spesialisert på eiendomsrett. VÆR KORT OG KONSIS. Gi kun de viktigste juridiske risikoene og rådene (maks 3-5 punkter). Ikke forklar grunnleggende ting som dokumentavgift eller standard kjøpsprosesser - brukeren kjenner disse. Fokuser på spesifikke juridiske feller eller muligheter knyttet til spørsmålet."
+                    "systemMessage": "Du er en erfaren norsk advokat spesialisert på eiendomsrett. VÆR KORT OG KONSIS (maks 3-5 punkter). Fokuser på juridiske risikoer, kontraktsfeller og tvistepotensial. Vær KONSERVATIV og RISIKOAVERS. Brukeren er profesjonell - hopp over grunnleggende forklaringer."
                 }
             },
             "id": "advokat-node",
@@ -36,7 +36,7 @@
             "typeVersion": 1,
             "position": [
                 550,
-                100
+                50
             ],
             "credentials": {
                 "googleGeminiApi": {
@@ -56,11 +56,40 @@
                     ]
                 },
                 "options": {
-                    "systemMessage": "Du er en erfaren eiendomsmegler i Norge. VÆR KORT OG KONSIS. Brukeren er selv bruktboligmegler, så IKKE foreslå at de skal kontakte en megler. Fokuser på markedsmuligheter, lokal pristrend og konkrete forhandlingstips (maks 3-5 punkter). Hopp over generelle råd om visning, finansiering etc."
+                    "systemMessage": "Du er en erfaren eiendomsmegler i Norge. VÆR KORT OG KONSIS (maks 3-5 punkter). Fokuser på markedstrender, prising og forhandlingstaktikk. Vær OPTIMISTISK og DEAL-FOKUSERT. Brukeren er selv bruktboligmegler - IKKE foreslå at de skal kontakte en megler."
                 }
             },
             "id": "megler-node",
             "name": "Megler",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                550,
+                175
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "={{ $json.question }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "systemMessage": "Du er en erfaren økonom med spesialisering i eiendomsinvesteringer i Norge. VÆR KORT OG KONSIS (maks 3-5 punkter). Fokuser på finansiell analyse, skatteoptimalisering og ROI-beregninger. Vær DATADREVET og PRESIS. Gi konkrete tall der mulig (f.eks. 'yield på 5-6%', 'skattefordel på 22%')."
+                }
+            },
+            "id": "okonom-node",
+            "name": "Økonom",
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
@@ -85,7 +114,36 @@
                     ]
                 },
                 "options": {
-                    "systemMessage": "Du er en erfaren eiendomsinvestor i Norge med fokus på utleieobjekter og verdistigning. VÆR KORT OG KONSIS. Analyser investeringspotensialet (yield, cash flow, oppside). Gi konkrete tall der mulig (f.eks. 'forvent 4-6% yield'). Maks 3-5 punkter. Brukeren er profesjonell, så hopp over grunnleggende investeringsråd."
+                    "systemMessage": "Du er en erfaren håndverker/entreprenør med lang erfaring fra oppussing og rehabilitering av boliger i Norge. VÆR KORT OG KONSIS (maks 3-5 punkter). Fokuser på oppussingskostnader, gjennomførbarhet og tidslinjer. Vær PRAKTISK og SKEPTISK. Gi grove kostnadsestimater der mulig (f.eks. 'nytt bad: 150-250k')."
+                }
+            },
+            "id": "handverker-node",
+            "name": "Håndverker",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                550,
+                425
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "={{ $json.question }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "systemMessage": "Du er en erfaren eiendomsinvestor i Norge med fokus på porteføljestrategi og langsiktig tenkning. VÆR KORT OG KONSIS (maks 3-5 punkter). Fokuser på porteføljestrategi, vekstpotensial og langsiktig verdiskapning. Vær AGGRESSIV og VEKSTFOKUSERT. Gi konkrete investeringsråd."
                 }
             },
             "id": "investor-node",
@@ -94,7 +152,7 @@
             "typeVersion": 1,
             "position": [
                 550,
-                500
+                550
             ],
             "credentials": {
                 "googleGeminiApi": {
@@ -120,7 +178,7 @@
         {
             "parameters": {
                 "respondWith": "json",
-                "responseBody": "={{ { advokat: $('Advokat Agent').first().json.output, megler: $('Megler Agent').first().json.output, investor: $('Investor Agent').first().json.output } }}"
+                "responseBody": "={{ { advokat: $('Advokat Agent').first().json.output, megler: $('Megler Agent').first().json.output, okonom: $('Økonom Agent').first().json.output, handverker: $('Håndverker Agent').first().json.output, investor: $('Investor Agent').first().json.output } }}"
             },
             "id": "respond-node",
             "name": "Respond to Webhook",
@@ -143,6 +201,16 @@
                     },
                     {
                         "node": "Megler",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Økonom",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Håndverker",
                         "type": "main",
                         "index": 0
                     },
@@ -176,13 +244,35 @@
                 ]
             ]
         },
-        "Investor": {
+        "Økonom": {
             "main": [
                 [
                     {
                         "node": "Combine Responses",
                         "type": "main",
                         "index": 2
+                    }
+                ]
+            ]
+        },
+        "Håndverker": {
+            "main": [
+                [
+                    {
+                        "node": "Combine Responses",
+                        "type": "main",
+                        "index": 3
+                    }
+                ]
+            ]
+        },
+        "Investor": {
+            "main": [
+                [
+                    {
+                        "node": "Combine Responses",
+                        "type": "main",
+                        "index": 4
                     }
                 ]
             ]

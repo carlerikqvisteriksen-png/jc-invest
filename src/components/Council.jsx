@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2, TrendingUp } from 'lucide-react';
+import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2, TrendingUp, Calculator, Hammer } from 'lucide-react';
 
 const WEBHOOK_URL = "/api/council";
 
@@ -7,7 +7,7 @@ export default function Council() {
     const [messages, setMessages] = useState([
         {
             role: 'system',
-            content: 'Velkommen til Rådet. Jeg er Prosessen, din formidler. Still ditt spørsmål, og våre AI-eksperter (Advokat, Megler & Investor) vil analysere saken.',
+            content: 'Velkommen til Rådet. Jeg er Prosessen, din formidler. Still ditt spørsmål, og våre 5 AI-eksperter (Advokat, Megler, Økonom, Håndverker & Investor) vil analysere saken.',
             agents: null
         }
     ]);
@@ -48,10 +48,12 @@ export default function Council() {
 
             const data = await response.json();
 
-            // Expected format: { advokat: "text", megler: "text", investor: "text" }
+            // Expected format: { advokat, megler, okonom, handverker, investor }
             const agentResponses = {
                 advokat: data.advokat || data.Advokat || "Ingen respons mottatt.",
                 megler: data.megler || data.Megler || "Ingen respons mottatt.",
+                okonom: data.okonom || data.Økonom || "Ingen respons mottatt.",
+                handverker: data.handverker || data.Håndverker || "Ingen respons mottatt.",
                 investor: data.investor || data.Investor || "Ingen respons mottatt."
             };
 
@@ -131,6 +133,32 @@ export default function Council() {
                                         {msg.agents.megler}
                                     </div>
                                 </div>
+
+                                {/* Økonom Card */}
+                                {msg.agents.okonom && msg.agents.okonom !== "Ingen respons mottatt." && (
+                                    <div className="velvet-card p-5 border-l-4 border-l-blue-500/60">
+                                        <div className="flex items-center gap-2 mb-3 text-blue-400/80 uppercase tracking-widest text-xs font-semibold">
+                                            <Calculator className="w-4 h-4" />
+                                            <span>Økonomens Vurdering</span>
+                                        </div>
+                                        <div className="prose prose-invert prose-sm max-w-none text-stone-200/90 leading-relaxed whitespace-pre-wrap">
+                                            {msg.agents.okonom}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Håndverker Card */}
+                                {msg.agents.handverker && msg.agents.handverker !== "Ingen respons mottatt." && (
+                                    <div className="velvet-card p-5 border-l-4 border-l-orange-500/60">
+                                        <div className="flex items-center gap-2 mb-3 text-orange-400/80 uppercase tracking-widest text-xs font-semibold">
+                                            <Hammer className="w-4 h-4" />
+                                            <span>Håndverkerens Vurdering</span>
+                                        </div>
+                                        <div className="prose prose-invert prose-sm max-w-none text-stone-200/90 leading-relaxed whitespace-pre-wrap">
+                                            {msg.agents.handverker}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Investor Card */}
                                 {msg.agents.investor && msg.agents.investor !== "Ingen respons mottatt." && (
