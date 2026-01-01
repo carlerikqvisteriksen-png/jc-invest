@@ -275,8 +275,8 @@ select option {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url('/texture-velvet.png');
-    background-size: 150px 150px;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
     background-repeat: repeat;
     opacity: 0.03;
     mix-blend-mode: overlay;
