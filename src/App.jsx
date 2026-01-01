@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Council from './components/Council';
 import { Bot, LineChart, Building2, ChevronRight, Lock, ScrollText, Wallet } from 'lucide-react';
 import './index.css';
 
@@ -181,7 +182,15 @@ function App() {
           </main>
         )}
 
-        {activeTab !== 'dashboard' && (
+
+        {activeTab === 'council' && (
+          <main className="min-h-[60vh] flex flex-col items-center justify-center fade-in w-full">
+            <Council />
+          </main>
+        )}
+
+        {/* Other tabs placeholder */}
+        {activeTab !== 'dashboard' && activeTab !== 'council' && (
           <main className="min-h-[60vh] flex flex-col items-center justify-center fade-in">
             <div className="velvet-card p-10 text-center">
               <h2 className="text-3xl font-serif text-brass mb-4 capitalize">{activeTab}</h2>
