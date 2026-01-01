@@ -20,7 +20,10 @@ function App() {
 
         {/* Header / Nave */}
         <header className="flex justify-between items-center mb-16 pt-4">
-          <div className="flex items-center gap-3 group cursor-pointer animate-breathe">
+          <div
+            className="flex items-center gap-3 group cursor-pointer animate-breathe"
+            onClick={() => setActiveTab('dashboard')}
+          >
             <div className="w-10 h-10 rounded-full bg-brass/10 border border-brass flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.3)]">
               <Building2 className="w-5 h-5 text-brass" />
             </div>
@@ -30,148 +33,165 @@ function App() {
           </div>
 
           <nav className="hidden md:flex gap-8 text-sm uppercase tracking-widest text-stone-light">
-            <a href="#" className="hover:text-brass transition-colors">Portefølje</a>
-            <a href="#" className="hover:text-brass transition-colors">Rådet</a>
-            <a href="#" className="hover:text-brass transition-colors">Marked</a>
-            <a href="#" className="hover:text-brass transition-colors">Innstillinger</a>
+            <button onClick={() => setActiveTab('portfolio')} className={`hover:text-brass transition-colors ${activeTab === 'portfolio' ? 'text-brass' : ''}`}>Portefølje</button>
+            <button onClick={() => setActiveTab('council')} className={`hover:text-brass transition-colors ${activeTab === 'council' ? 'text-brass' : ''}`}>Rådet</button>
+            <button onClick={() => setActiveTab('market')} className={`hover:text-brass transition-colors ${activeTab === 'market' ? 'text-brass' : ''}`}>Marked</button>
+            <button onClick={() => setActiveTab('settings')} className={`hover:text-brass transition-colors ${activeTab === 'settings' ? 'text-brass' : ''}`}>Innstillinger</button>
           </nav>
 
           <button className="btn-ghost flex items-center gap-2">
             <Lock className="w-4 h-4" />
-            <span>Sign In</span>
+            <span>Logg inn</span>
           </button>
         </header>
 
         {/* Hero Section / Altar */}
-        <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20 fade-in">
+        {activeTab === 'dashboard' && (
+          <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20 fade-in">
 
-          {/* Left Column: Welcome & Stats */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
-            <div className="space-y-4 mb-8">
-              <h2 className="text-5xl md:text-7xl font-serif text-ink-primary tracking-tight leading-none">
-                The <span className="text-brass italic">Cathedral</span> of<br />
-                Capital
-              </h2>
-              <p className="text-stone-light text-lg max-w-xl font-light leading-relaxed">
-                Enter the sanctuary of wealth preservation. Consult the AI Council, manage your portfolio, and observe the markets from the high tower.
-              </p>
+            {/* Left Column: Welcome & Stats */}
+            <div className="lg:col-span-8 flex flex-col gap-8">
+              <div className="space-y-4 mb-8">
+                <h2 className="text-5xl md:text-7xl font-serif text-ink-primary tracking-tight leading-none">
+                  Kapitalens <br />
+                  <span className="text-brass italic">Katedral</span>
+                </h2>
+                <p className="text-stone-light text-lg max-w-xl font-light leading-relaxed">
+                  Tre inn i rikdommens helligdom. Rådfør deg med AI-rådet, administrer porteføljen din og observer markedene fra høysetet.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Stat Card 1 */}
+                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="label-data">Total Balanse</span>
+                    <Wallet className="w-4 h-4 text-brass/60" />
+                  </div>
+                  <div className="text-2xl font-serif text-ink-primary">kr 2,450,000</div>
+                  <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                    <span>+12.5%</span>
+                    <span className="text-stone-light">siste mnd</span>
+                  </div>
+                </div>
+
+                {/* Stat Card 2 */}
+                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="label-data">Eiendom</span>
+                    <Building2 className="w-4 h-4 text-brass/60" />
+                  </div>
+                  <div className="text-2xl font-serif text-ink-primary">kr 8,200,000</div>
+                  <div className="text-xs text-stone-light mt-1">
+                    4 Enheter
+                  </div>
+                </div>
+
+                {/* Stat Card 3 */}
+                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="label-data">AI Råd</span>
+                    <Bot className="w-4 h-4 text-brass/60" />
+                  </div>
+                  <div className="text-xl font-serif text-ink-primary">Avventer</div>
+                  <div className="text-xs text-stone-light mt-1">
+                    Siste: "Kjøp i Oslo Øst"
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Action Area */}
+              <div className="velvet-card-elevated mt-8 min-h-[300px] flex flex-col justify-center items-center text-center p-10 group">
+                <div className="w-16 h-16 rounded-full bg-brass/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <ScrollText className="w-8 h-8 text-brass" />
+                </div>
+                <h3 className="text-2xl font-serif text-ink-primary mb-3">Søk Råd hos LLM Rådet</h3>
+                <p className="text-stone-light max-w-md mb-8">
+                  Våre AI-agenter (Advokat, Megler, Investore) står klare til å analysere din neste investering.
+                </p>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setActiveTab('council')}
+                    className="btn-cathedral flex items-center gap-2"
+                  >
+                    Start Sesjon <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Stat Card 1 */}
-              <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="label-data">Total Balanse</span>
-                  <Wallet className="w-4 h-4 text-brass/60" />
+            {/* Right Column: Recent Activity / Sidebar */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="gothic-card h-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="heading-title text-lg">Siste Hendelser</h3>
+                  <div className="badge-neutral">Live</div>
                 </div>
-                <div className="text-2xl font-serif text-ink-primary">kr 2,450,000</div>
-                <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
-                  <span>+12.5%</span>
-                  <span className="text-stone-light">siste mnd</span>
-                </div>
-              </div>
 
-              {/* Stat Card 2 */}
-              <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="label-data">Eiendom</span>
-                  <Building2 className="w-4 h-4 text-brass/60" />
-                </div>
-                <div className="text-2xl font-serif text-ink-primary">kr 8,200,000</div>
-                <div className="text-xs text-stone-light mt-1">
-                  4 Enheter
-                </div>
-              </div>
+                <div className="space-y-0">
+                  <div className="ledger-row">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Oslo Børs Åpner</span>
+                      <span className="text-xs text-stone-light">For 2 timer siden</span>
+                    </div>
+                    <span className="badge-neutral">Info</span>
+                  </div>
 
-              {/* Stat Card 3 */}
-              <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="label-data">AI Råd</span>
-                  <Bot className="w-4 h-4 text-brass/60" />
+                  <div className="ledger-row">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Leieinntekt: Parkveien</span>
+                      <span className="text-xs text-stone-light">I dag, 08:30</span>
+                    </div>
+                    <span className="text-green-400 text-sm font-mono">+12.5k</span>
+                  </div>
+
+                  <div className="ledger-row">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Vedlikehold: Tak</span>
+                      <span className="text-xs text-stone-light">I går</span>
+                    </div>
+                    <span className="text-red-400 text-sm font-mono">-4.2k</span>
+                  </div>
+
+                  <div className="ledger-row">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Ny rentesats</span>
+                      <span className="text-xs text-stone-light">Norges Bank</span>
+                    </div>
+                    <span className="badge-high">4.5%</span>
+                  </div>
+
+                  <div className="ledger-row border-none">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Rådet Møte</span>
+                      <span className="text-xs text-stone-light">For 2 dager siden</span>
+                    </div>
+                    <span className="badge-low">Fullført</span>
+                  </div>
                 </div>
-                <div className="text-xl font-serif text-ink-primary">Avventer</div>
-                <div className="text-xs text-stone-light mt-1">
-                  Siste: "Kjøp i Oslo Øst"
+
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <button className="w-full btn-ghost text-xs uppercase tracking-widest">
+                    Se hele loggen
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Main Action Area */}
-            <div className="velvet-card-elevated mt-8 min-h-[300px] flex flex-col justify-center items-center text-center p-10 group">
-              <div className="w-16 h-16 rounded-full bg-brass/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <ScrollText className="w-8 h-8 text-brass" />
-              </div>
-              <h3 className="text-2xl font-serif text-ink-primary mb-3">Søk Råd hos LLM Rådet</h3>
-              <p className="text-stone-light max-w-md mb-8">
-                Våre AI-agenter (Advokat, Megler, Investore) står klare til å analysere din neste investering.
-              </p>
-              <div className="flex gap-4">
-                <button className="btn-cathedral flex items-center gap-2">
-                  Start Sesjon <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+          </main>
+        )}
+
+        {activeTab !== 'dashboard' && (
+          <main className="min-h-[60vh] flex flex-col items-center justify-center fade-in">
+            <div className="velvet-card p-10 text-center">
+              <h2 className="text-3xl font-serif text-brass mb-4 capitalize">{activeTab}</h2>
+              <p className="text-stone-light">Denne seksjonen er under konstruksjon.</p>
+              <button onClick={() => setActiveTab('dashboard')} className="btn-ghost mt-6">
+                Tilbake til Dashbord
+              </button>
             </div>
-          </div>
-
-          {/* Right Column: Recent Activity / Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="gothic-card h-full">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="heading-title text-lg">Siste Hendelser</h3>
-                <div className="badge-neutral">Live</div>
-              </div>
-
-              <div className="space-y-0">
-                <div className="ledger-row">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Oslo Børs Åpner</span>
-                    <span className="text-xs text-stone-light">For 2 timer siden</span>
-                  </div>
-                  <span className="badge-neutral">Info</span>
-                </div>
-
-                <div className="ledger-row">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Leieinntekt: Parkveien</span>
-                    <span className="text-xs text-stone-light">I dag, 08:30</span>
-                  </div>
-                  <span className="text-green-400 text-sm font-mono">+12.5k</span>
-                </div>
-
-                <div className="ledger-row">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Vedlikehold: Tak</span>
-                    <span className="text-xs text-stone-light">I går</span>
-                  </div>
-                  <span className="text-red-400 text-sm font-mono">-4.2k</span>
-                </div>
-
-                <div className="ledger-row">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Ny rentesats</span>
-                    <span className="text-xs text-stone-light">Norges Bank</span>
-                  </div>
-                  <span className="badge-high">4.5%</span>
-                </div>
-
-                <div className="ledger-row border-none">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Rådet Møte</span>
-                    <span className="text-xs text-stone-light">For 2 dager siden</span>
-                  </div>
-                  <span className="badge-low">Fullført</span>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <button className="w-full btn-ghost text-xs uppercase tracking-widest">
-                  Se hele loggen
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </main>
+          </main>
+        )}
       </div>
     </div>
   )
