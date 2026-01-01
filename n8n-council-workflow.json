@@ -5,7 +5,7 @@
             "parameters": {
                 "httpMethod": "POST",
                 "path": "council-question",
-                "responseMode": "lastNode"
+                "responseMode": "responseNode"
             },
             "id": "webhook-node",
             "name": "Webhook",
