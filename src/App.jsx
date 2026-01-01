@@ -1,11 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Council from './components/Council';
 import Market from './components/Market';
-import { Bot, LineChart, Building2, ChevronRight, Lock, ScrollText, Wallet } from 'lucide-react';
+import Login from './components/Login';
+import { supabase, signOut, onAuthStateChange } from './lib/supabase';
+import { Bot, LineChart, Building2, ChevronRight, Lock, LogOut, ScrollText, Wallet, User } from 'lucide-react';
 import './index.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check auth state on mount
+  useEffect(() => {
+    // Get current session
+    const checkUser = async () => {
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      }
+      setIsLoading(false);
+    };
+    checkUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-brass border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!user) {
+    return <Login onLogin={setUser} />;
+  }
 
   return (
     <div className="min-h-screen bg-obsidian text-ink-primary font-sans selection:bg-brass selection:text-obsidian relative overflow-x-hidden">
@@ -41,10 +88,18 @@ function App() {
             <button onClick={() => setActiveTab('settings')} className={`hover:text-brass transition-colors ${activeTab === 'settings' ? 'text-brass' : ''}`}>Innstillinger</button>
           </nav>
 
-          <button className="btn-ghost flex items-center gap-2">
-            <Lock className="w-4 h-4" />
-            <span>Logg inn</span>
-          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-stone-500 text-sm hidden md:inline">
+              {user.email}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="btn-ghost flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden md:inline">Logg ut</span>
+            </button>
+          </div>
         </header>
 
         {/* Hero Section / Altar */}
