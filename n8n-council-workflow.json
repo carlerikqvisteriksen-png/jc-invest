@@ -36,7 +36,7 @@
             "typeVersion": 1,
             "position": [
                 550,
-                150
+                100
             ],
             "credentials": {
                 "googleGeminiApi": {
@@ -65,7 +65,7 @@
             "typeVersion": 1,
             "position": [
                 550,
-                400
+                300
             ],
             "credentials": {
                 "googleGeminiApi": {
@@ -76,8 +76,36 @@
         },
         {
             "parameters": {
-                "mode": "combine",
-                "combinationMode": "mergeByPosition",
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "={{ $json.question }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "systemMessage": "Du er en erfaren eiendomsinvestor i Norge med fokus på utleieobjekter og verdistigning. VÆR KORT OG KONSIS. Analyser investeringspotensialet (yield, cash flow, oppside). Gi konkrete tall der mulig (f.eks. 'forvent 4-6% yield'). Maks 3-5 punkter. Brukeren er profesjonell, så hopp over grunnleggende investeringsråd."
+                }
+            },
+            "id": "investor-node",
+            "name": "Investor",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                550,
+                500
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "mode": "append",
                 "options": {}
             },
             "id": "merge-node",
@@ -92,7 +120,7 @@
         {
             "parameters": {
                 "respondWith": "json",
-                "responseBody": "={{ { advokat: $json.input_1.text, megler: $json.input_2.text } }}"
+                "responseBody": "={{ { advokat: $('Advokat Agent').first().json.output, megler: $('Megler Agent').first().json.output, investor: $('Investor Agent').first().json.output } }}"
             },
             "id": "respond-node",
             "name": "Respond to Webhook",
@@ -117,6 +145,11 @@
                         "node": "Megler",
                         "type": "main",
                         "index": 0
+                    },
+                    {
+                        "node": "Investor",
+                        "type": "main",
+                        "index": 0
                     }
                 ]
             ]
@@ -139,6 +172,17 @@
                         "node": "Combine Responses",
                         "type": "main",
                         "index": 1
+                    }
+                ]
+            ]
+        },
+        "Investor": {
+            "main": [
+                [
+                    {
+                        "node": "Combine Responses",
+                        "type": "main",
+                        "index": 2
                     }
                 ]
             ]

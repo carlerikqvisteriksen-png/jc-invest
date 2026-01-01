@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2 } from 'lucide-react';
+import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2, TrendingUp } from 'lucide-react';
 
 const WEBHOOK_URL = "/api/council";
 
@@ -7,7 +7,7 @@ export default function Council() {
     const [messages, setMessages] = useState([
         {
             role: 'system',
-            content: 'Velkommen til Rådet. Jeg er Prosessen, din formidler. Still ditt spørsmål, og våre AI-eksperter (Advokat & Megler) vil analysere saken.',
+            content: 'Velkommen til Rådet. Jeg er Prosessen, din formidler. Still ditt spørsmål, og våre AI-eksperter (Advokat, Megler & Investor) vil analysere saken.',
             agents: null
         }
     ]);
@@ -48,13 +48,11 @@ export default function Council() {
 
             const data = await response.json();
 
-            // Expected format: { advokat: "text", megler: "text" }
-            // Or sometimes n8n returns an array or different structure depending on the last node.
-            // Based on user description: { advokat: ..., megler: ... }
-
+            // Expected format: { advokat: "text", megler: "text", investor: "text" }
             const agentResponses = {
                 advokat: data.advokat || data.Advokat || "Ingen respons mottatt.",
-                megler: data.megler || data.Megler || "Ingen respons mottatt."
+                megler: data.megler || data.Megler || "Ingen respons mottatt.",
+                investor: data.investor || data.Investor || "Ingen respons mottatt."
             };
 
             setMessages(prev => [...prev, {
@@ -133,6 +131,19 @@ export default function Council() {
                                         {msg.agents.megler}
                                     </div>
                                 </div>
+
+                                {/* Investor Card */}
+                                {msg.agents.investor && msg.agents.investor !== "Ingen respons mottatt." && (
+                                    <div className="velvet-card p-5 border-l-4 border-l-green-600/60">
+                                        <div className="flex items-center gap-2 mb-3 text-green-400/80 uppercase tracking-widest text-xs font-semibold">
+                                            <TrendingUp className="w-4 h-4" />
+                                            <span>Investorens Vurdering</span>
+                                        </div>
+                                        <div className="prose prose-invert prose-sm max-w-none text-stone-200/90 leading-relaxed whitespace-pre-wrap">
+                                            {msg.agents.investor}
+                                        </div>
+                                    </div>
+                                )}
 
                             </div>
                         )}
