@@ -1,0 +1,158 @@
+{
+    "name": "JC Invest - LLM Council",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "council-question",
+                "responseMode": "lastNode"
+            },
+            "id": "webhook-node",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "={{ $json.question }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "systemMessage": "Du er en erfaren norsk advokat spesialisert på eiendomsrett. Vær konservativ og påpek risiko. Referer til norsk lov der relevant."
+                }
+            },
+            "id": "advokat-node",
+            "name": "Advokat",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                550,
+                150
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "={{ $json.question }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "systemMessage": "Du er en erfaren eiendomsmegler i Norge. Fokuser på markedsmuligheter og forhandlingstaktikk."
+                }
+            },
+            "id": "megler-node",
+            "name": "Megler",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                550,
+                400
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "mode": "combine",
+                "combinationMode": "mergeByPosition",
+                "options": {}
+            },
+            "id": "merge-node",
+            "name": "Combine Responses",
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ { advokat: $json.input_1.text, megler: $json.input_2.text } }}"
+            },
+            "id": "respond-node",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Advokat",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Megler",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Advokat": {
+            "main": [
+                [
+                    {
+                        "node": "Combine Responses",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Megler": {
+            "main": [
+                [
+                    {
+                        "node": "Combine Responses",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Combine Responses": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

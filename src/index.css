@@ -1,0 +1,582 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Cinzel:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== GOTHIC CATHEDRAL THEME (JxC) ===== */
+
+@layer base {
+  body {
+    @apply font-sans bg-obsidian text-ink-primary antialiased;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* Brass/Gold selection */
+  ::selection {
+    background-color: #D4AF37;
+    color: #0A0A0A;
+  }
+
+  /* Gothic serif headings with subtle glow */
+  h1,
+  h2,
+  .font-serif {
+    font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  }
+
+  h1 {
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.1);
+  }
+
+  h2 {
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.2), 0 0 30px rgba(212, 175, 55, 0.08);
+  }
+
+  h3,
+  .font-gothic {
+    font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Thin scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.6);
+}
+
+/* ===== GLOBAL INPUT RESET - The Nuclear Option ===== */
+input,
+textarea,
+select {
+  background-color: transparent !important;
+  color: white !important;
+  border: none !important;
+  border-bottom: 1px solid #57534e !important;
+  border-radius: 0 !important;
+  outline: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-bottom-color: #D4AF37 !important;
+  box-shadow: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Autofill Fix - Prevent browser white backgrounds */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Select dropdown background */
+select option {
+  background-color: #0a0a0a !important;
+  color: white !important;
+}
+
+/* ===== IMAGE-BASED FOG ANIMATION ===== */
+@keyframes fogFlow {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-fog-slow {
+  animation: fogFlow 120s linear infinite;
+}
+
+.animate-fog-fast {
+  animation: fogFlow 60s linear infinite;
+}
+
+/* ===== GOTHIC COMPONENT CLASSES ===== */
+@layer components {
+
+  /* ===== VELVET CARD - The Gothic Window ===== */
+  /* Base velvet texture card with arch shape */
+  .velvet-card {
+    @apply relative rounded-t-[60px] rounded-b-lg p-5 border border-white/10 backdrop-blur-md;
+    background-color: rgba(0, 0, 0, 0.7);
+    box-shadow:
+      inset 0 0 30px rgba(255, 255, 255, 0.03),
+      0 0 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+
+  .velvet-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .velvet-card>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  .velvet-card-elevated {
+    @apply relative rounded-t-[60px] rounded-b-lg p-6 border border-brass/20 backdrop-blur-lg;
+    background-color: rgba(0, 0, 0, 0.7);
+    box-shadow:
+      inset 0 0 40px rgba(212, 175, 55, 0.05),
+      0 0 30px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+  }
+
+  .velvet-card-elevated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .velvet-card-elevated>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Gothic Glass Card - For use over cathedral background */
+  .gothic-card {
+    @apply relative rounded-t-[60px] rounded-b-lg p-5 border border-white/10 backdrop-blur-md;
+    background-color: rgba(10, 10, 10, 0.8);
+    box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.03);
+    overflow: hidden;
+  }
+
+  .gothic-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .gothic-card>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  .gothic-card-elevated {
+    @apply relative rounded-t-[60px] rounded-b-lg p-6 border border-brass/20 backdrop-blur-lg;
+    background-color: rgba(10, 10, 10, 0.85);
+    box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.05);
+    overflow: hidden;
+  }
+
+  .gothic-card-elevated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .gothic-card-elevated>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Solid Cards with velvet texture */
+  .card {
+    @apply relative rounded-t-[40px] rounded-b-lg p-4 border border-white/10 backdrop-blur-md;
+    background-color: rgba(10, 10, 10, 0.75);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .card>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-compact {
+    @apply relative rounded-t-[30px] rounded-b-md px-4 py-3 border border-white/10 backdrop-blur-sm;
+    background-color: rgba(10, 10, 10, 0.7);
+    overflow: hidden;
+  }
+
+  .card-compact::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/texture-velvet.png');
+    background-size: 150px 150px;
+    background-repeat: repeat;
+    opacity: 0.03;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .card-compact>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-elevated {
+    @apply relative rounded-t-2xl rounded-b-lg p-5 border border-brass/20 backdrop-blur-lg;
+    background-color: rgba(10, 10, 10, 0.8);
+    box-shadow: inset 0 0 30px rgba(212, 175, 55, 0.04);
+    overflow: hidden;
+  }
+
+  .card-elevated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .card-elevated>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Buttons */
+  .btn-brass {
+    @apply bg-brass hover:bg-brass-glow text-pb-base font-semibold;
+    @apply px-4 py-2 rounded-md text-sm;
+    @apply transition-all duration-200;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent border border-white/20 text-ink-secondary;
+    @apply px-4 py-2 rounded-md text-sm;
+    @apply hover:border-brass/50 hover:text-ink-primary;
+    @apply transition-all duration-200;
+  }
+
+  .btn-cathedral {
+    @apply bg-black/80 border-2 border-brass/60 text-brass font-serif font-semibold;
+    @apply px-8 py-4 rounded-lg text-lg;
+    @apply hover:bg-brass hover:text-black hover:border-brass;
+    @apply transition-all duration-300;
+  }
+
+  /* ===== INPUT FIELDS - Underline Style ===== */
+  .input-gothic {
+    @apply bg-transparent border-0 border-b-2 border-stone-500 text-white rounded-none px-1 py-3;
+    @apply placeholder:text-white/40 text-sm;
+    @apply focus:outline-none focus:border-brass focus:ring-0;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+  }
+
+  .input-gothic:hover {
+    @apply border-stone-400;
+  }
+
+  .input-gothic:focus {
+    background: linear-gradient(to top, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+  }
+
+  /* Compact input variant - for forms inside cards */
+  .input-compact {
+    @apply bg-transparent border-0 border-b border-stone-600 text-white rounded-none px-2 py-2;
+    @apply placeholder:text-stone-400 text-sm;
+    @apply focus:outline-none focus:border-yellow-600 focus:ring-0;
+    transition: border-color 0.3s ease;
+  }
+
+  .input-compact:hover {
+    @apply border-stone-500;
+  }
+
+  select.input-compact {
+    @apply bg-black/60 border-0 border-b border-stone-600 text-white rounded-none px-2 py-2;
+    @apply focus:outline-none focus:border-yellow-600 focus:ring-0;
+  }
+
+  /* Alternative with very subtle background */
+  .input-gothic-filled {
+    @apply bg-white/5 border-0 border-b-2 border-stone-500 text-white rounded-t-md rounded-b-none px-3 py-3;
+    @apply placeholder:text-white/40 text-sm;
+    @apply focus:outline-none focus:border-brass focus:bg-white/10;
+    transition: all 0.3s ease;
+  }
+
+  /* Textarea variant */
+  textarea.input-gothic {
+    @apply bg-white/5 border border-stone-600 rounded-lg px-3;
+    @apply focus:border-brass focus:bg-white/10;
+  }
+
+  /* Select dropdown styling */
+  select.input-gothic {
+    @apply bg-black/60 border-0 border-b-2 border-stone-500 rounded-none;
+    @apply focus:border-brass;
+  }
+
+  /* ===== AUTOFILL FIX - Prevent white backgrounds ===== */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  textarea:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
+    -webkit-text-fill-color: white !important;
+    caret-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Labels & Text */
+  .label-section {
+    @apply text-xs uppercase tracking-widest text-white/50 font-semibold;
+  }
+
+  .label-data {
+    @apply text-[10px] uppercase tracking-widest text-white/40;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .badge-high {
+    @apply badge bg-red-900/60 text-red-300;
+  }
+
+  .badge-medium {
+    @apply badge bg-yellow-900/60 text-yellow-300;
+  }
+
+  .badge-low {
+    @apply badge bg-green-900/60 text-green-300;
+  }
+
+  .badge-neutral {
+    @apply badge bg-white/10 text-white/60;
+  }
+
+  /* Headings */
+  .heading-title {
+    @apply font-serif text-xl text-ink-primary;
+  }
+
+  .heading-hero {
+    @apply font-serif text-4xl md:text-5xl text-brass tracking-tight;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px bg-white/10 my-4;
+  }
+
+  /* Data Display */
+  .data-value {
+    @apply font-mono text-ink-primary tracking-tight;
+  }
+
+  .data-positive {
+    @apply font-mono text-green-400 tracking-tight;
+  }
+
+  .data-negative {
+    @apply font-mono text-red-400 tracking-tight;
+  }
+
+  /* Ledger Row */
+  .ledger-row {
+    @apply flex items-center justify-between py-2.5 px-3 border-b border-dashed border-white/10 last:border-b-0;
+  }
+
+  .ledger-row:hover {
+    @apply bg-white/5;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@layer utilities {
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Breathing animation for logo */
+  .animate-breathe {
+    animation: breathe 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes breathe {
+    from {
+      transform: scale(1);
+    }
+
+    to {
+      transform: scale(1.05);
+    }
+  }
+
+  /* ===== FOG/MIST ANIMATION - The Cathedral Mist ===== */
+  .fog-layer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 45%;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 100% 80% at 10% 100%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 70% at 50% 100%, rgba(255, 255, 255, 0.12) 0%, transparent 45%),
+      radial-gradient(ellipse 90% 60% at 90% 100%, rgba(255, 255, 255, 0.14) 0%, transparent 40%);
+    animation: fogPulse 8s ease-in-out infinite;
+  }
+
+  .fog-layer-2 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35%;
+    pointer-events: none;
+    z-index: 4;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 120% 90% at 25% 100%, rgba(200, 200, 200, 0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 80% at 75% 100%, rgba(180, 180, 180, 0.08) 0%, transparent 50%);
+    animation: fogPulse2 12s ease-in-out infinite;
+  }
+
+  @keyframes fogPulse {
+
+    0%,
+    100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes fogPulse2 {
+
+    0%,
+    100% {
+      opacity: 0.6;
+      transform: scale(1.02);
+    }
+
+    50% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+  }
+
+  /* Subtle pulsing glow for gothic elements */
+  .glow-pulse {
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes glowPulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    }
+
+    50% {
+      box-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
+    }
+  }
+}
