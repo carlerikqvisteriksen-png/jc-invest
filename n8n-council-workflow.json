@@ -177,15 +177,44 @@
         },
         {
             "parameters": {
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "SPØRSMÅL: {{ $('Webhook').first().json.question }}\n\n--- RÅDETS VURDERINGER ---\n\nADVOKAT: {{ $('Advokat Agent').first().json.output }}\n\nMEGLER: {{ $('Megler Agent').first().json.output }}\n\nØKONOM: {{ $('Økonom Agent').first().json.output }}\n\nHÅNDVERKER: {{ $('Håndverker Agent').first().json.output }}\n\nINVESTOR: {{ $('Investor Agent').first().json.output }}\n\n--- OPPSUMMER OG GI DIN ANBEFALING ---"
+                        }
+                    ]
+                },
+                "options": {
+                    "systemMessage": "Du er STYRELEDEREN i et eiendomsinvesteringsråd. Du har nettopp hørt innspill fra 5 eksperter: Advokat, Megler, Økonom, Håndverker og Investor. Din oppgave er å:\n\n1. Kort oppsummere de viktigste poengene fra hvert rådsmøte (1 setning per ekspert)\n2. Identifisere eventuelle KONFLIKTER mellom rådene\n3. Gi en KLAR ANBEFALING (JA/NEI/KANSKJE med betingelser)\n4. Forklare hvorfor i 2-3 setninger\n\nVær BESLUTTSOM og TYDELIG. Ikke vær vag. Brukeren trenger et konkret råd."
+                }
+            },
+            "id": "styreleder-node",
+            "name": "Styreleder",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                300
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
                 "respondWith": "json",
-                "responseBody": "={{ { advokat: $('Advokat Agent').first().json.output, megler: $('Megler Agent').first().json.output, okonom: $('Økonom Agent').first().json.output, handverker: $('Håndverker Agent').first().json.output, investor: $('Investor Agent').first().json.output } }}"
+                "responseBody": "={{ { advokat: $('Advokat Agent').first().json.output, megler: $('Megler Agent').first().json.output, okonom: $('Økonom Agent').first().json.output, handverker: $('Håndverker Agent').first().json.output, investor: $('Investor Agent').first().json.output, styreleder: $('Styreleder Agent').first().json.output } }}"
             },
             "id": "respond-node",
             "name": "Respond to Webhook",
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1,
             "position": [
-                1100,
+                1300,
                 300
             ]
         }
@@ -278,6 +307,17 @@
             ]
         },
         "Combine Responses": {
+            "main": [
+                [
+                    {
+                        "node": "Styreleder",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Styreleder": {
             "main": [
                 [
                     {

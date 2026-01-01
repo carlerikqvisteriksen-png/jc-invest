@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2, TrendingUp, Calculator, Hammer } from 'lucide-react';
+import { Send, Bot, User, Scale, Briefcase, Loader2, Sparkles, Building2, TrendingUp, Calculator, Hammer, Crown } from 'lucide-react';
 
 const WEBHOOK_URL = "/api/council";
 
@@ -7,7 +7,7 @@ export default function Council() {
     const [messages, setMessages] = useState([
         {
             role: 'system',
-            content: 'Velkommen til Rådet. Jeg er Prosessen, din formidler. Still ditt spørsmål, og våre 5 AI-eksperter (Advokat, Megler, Økonom, Håndverker & Investor) vil analysere saken.',
+            content: 'Velkommen til Rådet. Still ditt spørsmål, og våre 5 eksperter vil analysere saken. Deretter oppsummerer Styrelederen og gir deg en anbefaling.',
             agents: null
         }
     ]);
@@ -48,13 +48,14 @@ export default function Council() {
 
             const data = await response.json();
 
-            // Expected format: { advokat, megler, okonom, handverker, investor }
+            // Expected format: { advokat, megler, okonom, handverker, investor, styreleder }
             const agentResponses = {
                 advokat: data.advokat || data.Advokat || "Ingen respons mottatt.",
                 megler: data.megler || data.Megler || "Ingen respons mottatt.",
                 okonom: data.okonom || data.Økonom || "Ingen respons mottatt.",
                 handverker: data.handverker || data.Håndverker || "Ingen respons mottatt.",
-                investor: data.investor || data.Investor || "Ingen respons mottatt."
+                investor: data.investor || data.Investor || "Ingen respons mottatt.",
+                styreleder: data.styreleder || data.Styreleder || null
             };
 
             setMessages(prev => [...prev, {
@@ -169,6 +170,22 @@ export default function Council() {
                                         </div>
                                         <div className="prose prose-invert prose-sm max-w-none text-stone-200/90 leading-relaxed whitespace-pre-wrap">
                                             {msg.agents.investor}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Styreleder Card - Special Highlighted Design */}
+                                {msg.agents.styreleder && (
+                                    <div className="mt-6 relative">
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-brass/30 via-brass/10 to-brass/30 rounded-xl blur-sm"></div>
+                                        <div className="relative velvet-card p-6 border-2 border-brass/40 bg-gradient-to-b from-brass/5 to-transparent">
+                                            <div className="flex items-center gap-2 mb-4 text-brass uppercase tracking-widest text-sm font-bold">
+                                                <Crown className="w-5 h-5" />
+                                                <span>Styrelederens Oppsummering & Anbefaling</span>
+                                            </div>
+                                            <div className="prose prose-invert prose-sm max-w-none text-ink-primary leading-relaxed whitespace-pre-wrap">
+                                                {msg.agents.styreleder}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
