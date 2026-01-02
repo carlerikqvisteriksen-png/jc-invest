@@ -14,7 +14,10 @@ export default function PropertyCard({
     isNew = false,
     isSold = true
 }) {
-    const formatPrice = (num) => new Intl.NumberFormat('nb-NO').format(num);
+    const formatPrice = (num) => {
+        const value = Number(num);
+        return isNaN(value) ? '-' : new Intl.NumberFormat('nb-NO').format(value);
+    };
 
     return (
         <div className="group relative flex-shrink-0 w-72 bg-obsidian border border-white/10 rounded-lg overflow-hidden hover:border-brass/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.1)]">
@@ -32,8 +35,8 @@ export default function PropertyCard({
                 {/* Badge */}
                 {(isSold || isNew) && (
                     <div className={`absolute top-3 left-3 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${isSold
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-green-500 text-white'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-green-500 text-white'
                         }`}>
                         {isSold ? 'Nylig solgt' : 'Ny annonse'}
                     </div>

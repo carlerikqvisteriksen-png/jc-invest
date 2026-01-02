@@ -117,8 +117,8 @@ export default function PropertyCarousel({
                         onClick={() => scroll('left')}
                         disabled={!canScrollLeft}
                         className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${canScrollLeft
-                                ? 'border-white/20 hover:border-brass/50 hover:bg-brass/10 text-stone-400 hover:text-brass'
-                                : 'border-white/5 text-stone-700 cursor-not-allowed'
+                            ? 'border-white/20 hover:border-brass/50 hover:bg-brass/10 text-stone-400 hover:text-brass'
+                            : 'border-white/5 text-stone-700 cursor-not-allowed'
                             }`}
                     >
                         <ChevronLeft className="w-5 h-5" />
@@ -127,8 +127,8 @@ export default function PropertyCarousel({
                         onClick={() => scroll('right')}
                         disabled={!canScrollRight}
                         className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${canScrollRight
-                                ? 'border-white/20 hover:border-brass/50 hover:bg-brass/10 text-stone-400 hover:text-brass'
-                                : 'border-white/5 text-stone-700 cursor-not-allowed'
+                            ? 'border-white/20 hover:border-brass/50 hover:bg-brass/10 text-stone-400 hover:text-brass'
+                            : 'border-white/5 text-stone-700 cursor-not-allowed'
                             }`}
                     >
                         <ChevronRight className="w-5 h-5" />
@@ -144,7 +144,15 @@ export default function PropertyCarousel({
             >
                 {properties.map((property) => (
                     <div key={property.id} style={{ scrollSnapAlign: 'start' }}>
-                        <PropertyCard {...property} />
+                        <PropertyCard
+                            {...property}
+                            image={property.image_url || property.image}
+                            location={property.city || property.location}
+                            link={property.finn_url || property.link}
+                            price={property.price || property.sold_price}
+                            priceLabel={property.is_sold ? "NYLIG SOLGT" : "ANTATT PRIS"}
+                            isSold={property.is_sold ?? property.isSold ?? false}
+                        />
                     </div>
                 ))}
             </div>

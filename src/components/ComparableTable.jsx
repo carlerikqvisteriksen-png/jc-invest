@@ -35,11 +35,23 @@ export default function ComparableTable({ data = mockData, title = "Sammenlignba
             let bVal = b[sortConfig.key];
 
             // Handle date sorting
-            if (sortConfig.key === 'sold') {
-                const [aMonth, aYear] = aVal.split('.');
-                const [bMonth, bYear] = bVal.split('.');
-                aVal = parseInt(aYear) * 100 + parseInt(aMonth);
-                bVal = parseInt(bYear) * 100 + parseInt(bMonth);
+            if (sortConfig.key === 'sold' || sortConfig.key === 'sold_date') {
+                const valA = a.sold_date || a.sold;
+                const valB = b.sold_date || b.sold;
+
+                // Try parsing as ISO date first
+                aVal = new Date(valA).getTime();
+                bVal = new Date(valB).getTime();
+
+                // If ISO fails (mock data format), try manual parse
+                if (isNaN(aVal)) {
+                    const [aMonth, aYear] = valA.split('.');
+                    aVal = parseInt(aYear) * 100 + parseInt(aMonth);
+                }
+                if (isNaN(bVal)) {
+                    const [bMonth, bYear] = valB.split('.');
+                    bVal = parseInt(bYear) * 100 + parseInt(bMonth);
+                }
             }
 
             if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -100,8 +112,8 @@ export default function ComparableTable({ data = mockData, title = "Sammenlignba
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs transition-colors ${filterStatus
-                                    ? 'bg-brass/20 text-brass border border-brass/30'
-                                    : 'bg-white/5 text-stone-400 border border-white/10 hover:bg-white/10'
+                                ? 'bg-brass/20 text-brass border border-brass/30'
+                                : 'bg-white/5 text-stone-400 border border-white/10 hover:bg-white/10'
                                 }`}
                         >
                             <Filter className="w-3 h-3" />
@@ -213,37 +225,48 @@ export default function ComparableTable({ data = mockData, title = "Sammenlignba
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedData.map((row, idx) => (
-                            <tr
-                                key={row.id}
-                                className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedRows.has(row.id) ? 'bg-brass/5' : ''
-                                    }`}
-                            >
-                                <td className="p-3">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedRows.has(row.id)}
-                                        onChange={() => toggleRow(row.id)}
-                                        className="rounded border-white/30 bg-transparent text-brass focus:ring-brass/30"
-                                    />
-                                </td>
-                                <td className="p-3 text-ink-primary font-medium">{row.address}</td>
-                                <td className="p-3 text-stone-400">{row.sold}</td>
-                                <td className="p-3 text-right text-ink-primary">{formatPrice(row.price)}</td>
-                                <td className="p-3 text-right text-stone-400">{formatPrice(row.pricePerSqm)}</td>
-                                <td className="p-3 text-right text-stone-400">{row.sqm}</td>
-                                <td className="p-3 text-center text-stone-400">{row.floor}</td>
-                                <td className="p-3 text-center text-stone-400">{row.year}</td>
-                                <td className="p-3 text-center">
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.status === 'Umøblert'
+                        {sortedData.map((row) => {
+                            const address = row.address;
+                            const sold = row.sold_date || row.sold;
+                            const price = row.sold_price || row.price;
+                            const pricePerSqm = row.price_per_sqm || row.pricePerSqm;
+                            const sqm = row.sqm;
+                            const floor = row.floor;
+                            const year = row.build_year || row.year;
+                            const status = row.condition || row.status || 'Aktuellt';
+
+                            return (
+                                <tr
+                                    key={row.id}
+                                    className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedRows.has(row.id) ? 'bg-brass/5' : ''
+                                        }`}
+                                >
+                                    <td className="p-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedRows.has(row.id)}
+                                            onChange={() => toggleRow(row.id)}
+                                            className="rounded border-white/30 bg-transparent text-brass focus:ring-brass/30"
+                                        />
+                                    </td>
+                                    <td className="p-3 text-ink-primary font-medium">{address}</td>
+                                    <td className="p-3 text-stone-400">{sold}</td>
+                                    <td className="p-3 text-right text-ink-primary">{formatPrice(price)}</td>
+                                    <td className="p-3 text-right text-stone-400">{formatPrice(pricePerSqm)}</td>
+                                    <td className="p-3 text-right text-stone-400">{sqm}</td>
+                                    <td className="p-3 text-center text-stone-400">{floor}</td>
+                                    <td className="p-3 text-center text-stone-400">{year}</td>
+                                    <td className="p-3 text-center">
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${status === 'Umøblert' || status === 'Good'
                                             ? 'bg-stone-700/50 text-stone-300'
                                             : 'bg-blue-900/30 text-blue-300'
-                                        }`}>
-                                        {row.status}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
+                                            }`}>
+                                            {status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
