@@ -252,11 +252,11 @@ export default function Market() {
                         )}
 
                         {/* Value Estimate Cards */}
-                        <ValueEstimateCards />
+                        <ValueEstimateCards properties={filteredProperties} comparableSales={comparableSales} />
 
                         {/* Two column layout for desktop */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <ScoreCards />
+                            <ScoreCards properties={filteredProperties} />
                             <RentalPrices properties={filteredProperties} />
                         </div>
 

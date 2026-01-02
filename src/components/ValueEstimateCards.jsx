@@ -1,31 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-// Mock data - replace with real data later
-const defaultData = {
-    indexedPrice: {
-        value: 12492448,
-        perSqm: 123688,
-        change: 17,
-        label: 'Indeksert pris',
-        date: 'fra 26.01.2024'
-    },
-    estimate: {
-        value: 12216000,
-        perSqm: 120950,
-        change: null,
-        label: 'Verdiestimat'
-    },
-    comparableSales: {
-        value: 11857542,
-        perSqm: 117401,
-        count: 396,
-        label: 'Sammenlignbare salg'
-    }
-};
-
 function formatPrice(num) {
-    return new Intl.NumberFormat('nb-NO').format(num);
+    if (!num || isNaN(num)) return '—';
+    return new Intl.NumberFormat('nb-NO').format(Math.round(num));
 }
 
 function TrendIndicator({ change }) {
@@ -54,27 +32,84 @@ function TrendIndicator({ change }) {
     );
 }
 
-export default function ValueEstimateCards({ data = defaultData }) {
+export default function ValueEstimateCards({ properties = [], comparableSales = [] }) {
+
+    // Calculate dynamic values from properties
+    const stats = useMemo(() => {
+        // Properties stats
+        const validProps = properties.filter(p => p.price || p.price_total);
+        const totalPrice = validProps.reduce((sum, p) => sum + (p.price || p.price_total || 0), 0);
+        const avgPrice = validProps.length > 0 ? totalPrice / validProps.length : 0;
+
+        const validSqmProps = validProps.filter(p => p.sqm > 0);
+        const avgPricePerSqm = validSqmProps.length > 0
+            ? validSqmProps.reduce((sum, p) => sum + ((p.price || p.price_total) / p.sqm), 0) / validSqmProps.length
+            : 0;
+
+        // Comparable sales stats
+        const validSales = comparableSales.filter(s => s.sold_price || s.price);
+        const totalSalesPrice = validSales.reduce((sum, s) => sum + (s.sold_price || s.price || 0), 0);
+        const avgSalesPrice = validSales.length > 0 ? totalSalesPrice / validSales.length : 0;
+
+        const validSalesSqm = validSales.filter(s => s.sqm > 0);
+        const avgSalesPricePerSqm = validSalesSqm.length > 0
+            ? validSalesSqm.reduce((sum, s) => sum + ((s.sold_price || s.price) / s.sqm), 0) / validSalesSqm.length
+            : 0;
+
+        return {
+            indexedPrice: {
+                value: avgPrice,
+                perSqm: avgPricePerSqm,
+                change: null, // No historical data yet
+                label: 'Snittpris',
+                subtitle: `${validProps.length} boliger`
+            },
+            estimate: {
+                value: avgPrice * 0.98, // Slight discount as "estimate"
+                perSqm: avgPricePerSqm * 0.98,
+                change: null,
+                label: 'Estimert verdi'
+            },
+            comparableSales: {
+                value: avgSalesPrice,
+                perSqm: avgSalesPricePerSqm,
+                count: validSales.length,
+                label: 'Sammenlignbare salg'
+            }
+        };
+    }, [properties, comparableSales]);
+
+    // If no data, show placeholder
+    if (properties.length === 0 && comparableSales.length === 0) {
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 opacity-50">
+                <div className="rounded-lg p-4 bg-white/5 border border-white/10 text-center">
+                    <p className="text-stone-400 text-sm">Ingen data tilgjengelig</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Indeksert pris - Purple */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 fade-in">
+            {/* Snittpris - Purple */}
             <div className="relative overflow-hidden rounded-lg p-4 bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/30">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 <div className="relative">
                     <div className="flex items-center justify-between mb-1">
                         <span className="text-purple-300/80 text-xs uppercase tracking-wider">
-                            {data.indexedPrice.label}
+                            {stats.indexedPrice.label}
                         </span>
-                        <TrendIndicator change={data.indexedPrice.change} />
+                        <TrendIndicator change={stats.indexedPrice.change} />
                     </div>
-                    {data.indexedPrice.date && (
-                        <span className="text-purple-400/60 text-[10px]">{data.indexedPrice.date}</span>
+                    {stats.indexedPrice.subtitle && (
+                        <span className="text-purple-400/60 text-[10px]">{stats.indexedPrice.subtitle}</span>
                     )}
                     <div className="text-2xl font-serif text-purple-100 mt-2">
-                        {formatPrice(data.indexedPrice.value)}
+                        {formatPrice(stats.indexedPrice.value)}
                     </div>
                     <div className="text-purple-300/60 text-xs mt-1">
-                        kr/m² <span className="text-purple-200">{formatPrice(data.indexedPrice.perSqm)}</span>
+                        kr/m² <span className="text-purple-200">{formatPrice(stats.indexedPrice.perSqm)}</span>
                     </div>
                 </div>
             </div>
@@ -85,15 +120,15 @@ export default function ValueEstimateCards({ data = defaultData }) {
                 <div className="relative">
                     <div className="flex items-center justify-between mb-1">
                         <span className="text-green-300/80 text-xs uppercase tracking-wider">
-                            {data.estimate.label}
+                            {stats.estimate.label}
                         </span>
-                        <TrendIndicator change={data.estimate.change} />
+                        <TrendIndicator change={stats.estimate.change} />
                     </div>
                     <div className="text-2xl font-serif text-green-100 mt-2">
-                        {formatPrice(data.estimate.value)}
+                        {formatPrice(stats.estimate.value)}
                     </div>
                     <div className="text-green-300/60 text-xs mt-1">
-                        kr/m² <span className="text-green-200">{formatPrice(data.estimate.perSqm)}</span>
+                        kr/m² <span className="text-green-200">{formatPrice(stats.estimate.perSqm)}</span>
                     </div>
                 </div>
             </div>
@@ -104,19 +139,19 @@ export default function ValueEstimateCards({ data = defaultData }) {
                 <div className="relative">
                     <div className="flex items-center justify-between mb-1">
                         <span className="text-blue-300/80 text-xs uppercase tracking-wider">
-                            {data.comparableSales.label}
+                            {stats.comparableSales.label}
                         </span>
-                        {data.comparableSales.count && (
+                        {stats.comparableSales.count > 0 && (
                             <span className="text-blue-400/60 text-xs">
-                                basert på <span className="text-blue-300">{data.comparableSales.count}</span>
+                                basert på <span className="text-blue-300">{stats.comparableSales.count}</span>
                             </span>
                         )}
                     </div>
                     <div className="text-2xl font-serif text-blue-100 mt-2">
-                        {formatPrice(data.comparableSales.value)}
+                        {formatPrice(stats.comparableSales.value)}
                     </div>
                     <div className="text-blue-300/60 text-xs mt-1">
-                        kr/m² <span className="text-blue-200">{formatPrice(data.comparableSales.perSqm)}</span>
+                        kr/m² <span className="text-blue-200">{formatPrice(stats.comparableSales.perSqm)}</span>
                     </div>
                 </div>
             </div>
