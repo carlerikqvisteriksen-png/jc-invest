@@ -146,8 +146,8 @@ export default function Market() {
                                         key={loc}
                                         onClick={() => toggleLocation(loc)}
                                         className={`px-3 py-1.5 rounded-full text-xs border transition-all ${filters.locations.includes(loc)
-                                                ? 'bg-brass text-obsidian border-brass font-bold'
-                                                : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500'
+                                            ? 'bg-brass text-obsidian border-brass font-bold'
+                                            : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500'
                                             }`}
                                     >
                                         {loc}
@@ -272,7 +272,7 @@ export default function Market() {
             )}
 
             {activeTab === 'map' && (
-                <MapAnalysis />
+                <MapAnalysis properties={filteredProperties} />
             )}
         </div>
     );
