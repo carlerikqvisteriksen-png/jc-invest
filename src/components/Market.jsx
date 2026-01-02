@@ -257,7 +257,7 @@ export default function Market() {
                         {/* Two column layout for desktop */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <ScoreCards />
-                            <RentalPrices />
+                            <RentalPrices properties={filteredProperties} />
                         </div>
 
                         {/* Comparable Sales Table */}
