@@ -19,14 +19,14 @@ const mockAreaData = {
         { type: 'Enebolig', moblert: 29000, umoblert: 25000, delvisMoblert: null }
     ],
     areas: [
-        { id: 1, name: 'Sentrum', count: 456, avgPrice: 22500, lat: 63.4305, lng: 10.3951 },
-        { id: 2, name: 'Lade', count: 234, avgPrice: 18200, lat: 63.4402, lng: 10.4321 },
-        { id: 3, name: 'Byåsen', count: 189, avgPrice: 16800, lat: 63.4123, lng: 10.3456 },
-        { id: 4, name: 'Tiller', count: 167, avgPrice: 14500, lat: 63.3654, lng: 10.3876 },
-        { id: 5, name: 'Heimdal', count: 145, avgPrice: 13200, lat: 63.3521, lng: 10.3321 },
-        { id: 6, name: 'Moholt', count: 198, avgPrice: 15800, lat: 63.4098, lng: 10.4234 },
-        { id: 7, name: 'Nardo', count: 112, avgPrice: 14200, lat: 63.4234, lng: 10.3654 },
-        { id: 8, name: 'Rosten', count: 87, avgPrice: 13800, lat: 63.3876, lng: 10.4012 }
+        { id: 1, name: 'Oslo Sentrum', count: 412, avgPrice: 24500, lat: 63.4305, lng: 10.3951 }, // Keeping coords abstract for now
+        { id: 2, name: 'Grünerløkka', count: 328, avgPrice: 21200, lat: 63.4402, lng: 10.4321 },
+        { id: 3, name: 'Frogner', count: 156, avgPrice: 26800, lat: 63.4123, lng: 10.3456 },
+        { id: 4, name: 'Hønefoss', count: 89, avgPrice: 13500, lat: 63.3654, lng: 10.3876 },
+        { id: 5, name: 'Ringerike', count: 45, avgPrice: 12200, lat: 63.3521, lng: 10.3321 },
+        { id: 6, name: 'Hole', count: 12, avgPrice: 14800, lat: 63.4098, lng: 10.4234 },
+        { id: 7, name: 'Gamle Oslo', count: 212, avgPrice: 19500, lat: 63.4234, lng: 10.3654 },
+        { id: 8, name: 'St. Hanshaugen', count: 143, avgPrice: 22800, lat: 63.3876, lng: 10.4012 }
     ]
 };
 
@@ -44,8 +44,8 @@ function AreaMarker({ area, isSelected, onClick }) {
             }}
         >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isSelected
-                    ? 'bg-brass text-obsidian shadow-lg shadow-brass/30'
-                    : 'bg-obsidian border-2 border-brass/50 text-brass hover:bg-brass/20'
+                ? 'bg-brass text-obsidian shadow-lg shadow-brass/30'
+                : 'bg-obsidian border-2 border-brass/50 text-brass hover:bg-brass/20'
                 }`}>
                 {area.count > 99 ? '99+' : area.count}
             </div>

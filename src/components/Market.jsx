@@ -26,6 +26,14 @@ export default function Market() {
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Filters
+    const [filters, setFilters] = useState({
+        locations: ['Oslo', 'Ringerike', 'Hole'], // Default active locations
+        type: 'Leilighet',
+        minPrice: 2500000,
+        maxPrice: 3500000
+    });
+
     useEffect(() => {
         if (activeTab === 'overview') {
             loadLiveProperties();
@@ -35,9 +43,10 @@ export default function Market() {
     const loadLiveProperties = async () => {
         setIsLoading(true);
         try {
+            // Fetch more properties to allow for client-side filtering
             const [marketData, comparableData] = await Promise.all([
-                getMarketProperties({ limit: 10 }),
-                getComparableSales({ limit: 20 })
+                getMarketProperties({ limit: 100 }),
+                getComparableSales({ limit: 50 })
             ]);
             setLiveProperties(marketData);
             setComparableSales(comparableData);
@@ -46,6 +55,39 @@ export default function Market() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // Filter Logic
+    const filteredProperties = liveProperties.filter(p => {
+        // Search
+        const searchMatch = !searchQuery ||
+            (p.address?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (p.city?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        // Location (City/Municipality checks)
+        // Note: Finn data often puts municipality in 'location' or 'city'. 
+        // We check if the property's city/location matches ANY of the selected filter locations.
+        const locationMatch = filters.locations.length === 0 || filters.locations.some(loc =>
+            p.city?.includes(loc) || p.address?.includes(loc) || (loc === 'Hønefoss' && p.city?.includes('Ringerike'))
+        );
+
+        // Type
+        const typeMatch = !filters.type || p.property_type?.toLowerCase().includes(filters.type.toLowerCase()) || filters.type === 'Alle';
+
+        // Price
+        const price = p.price || p.price_total || 0;
+        const priceMatch = (price >= filters.minPrice) && (filters.maxPrice === 0 || price <= filters.maxPrice);
+
+        return searchMatch && locationMatch && typeMatch && priceMatch;
+    });
+
+    const toggleLocation = (loc) => {
+        setFilters(prev => ({
+            ...prev,
+            locations: prev.locations.includes(loc)
+                ? prev.locations.filter(l => l !== loc)
+                : [...prev.locations, loc]
+        }));
     };
 
     return (
@@ -74,7 +116,7 @@ export default function Market() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex justify-center gap-2 mb-8">
+            <div className="flex justify-center gap-2 mb-6">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
@@ -90,23 +132,67 @@ export default function Market() {
                 ))}
             </div>
 
-            {/* Search Bar - shown on overview */}
+            {/* FILTERS SECTION */}
             {activeTab === 'overview' && (
-                <div className="relative mb-8 max-w-2xl mx-auto">
-                    <div className="relative group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-brass/20 to-blue-500/20 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                        <div className="relative flex items-center bg-obsidian border border-white/10 rounded-lg p-2">
-                            <MapPin className="w-5 h-5 text-stone-500 ml-2" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Søk etter adresse, postnummer eller område..."
-                                className="flex-1 bg-transparent border-none focus:ring-0 text-ink-primary px-4 py-2 placeholder-stone-600 focus:outline-none"
-                            />
-                            <button className="p-2 bg-brass/10 hover:bg-brass/20 text-brass rounded-md transition-colors">
-                                <Search className="w-5 h-5" />
-                            </button>
+                <div className="mb-8 p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                        {/* 1. Locations */}
+                        <div>
+                            <label className="text-[10px] uppercase tracking-wider text-stone-500 mb-2 block">Områder</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['Oslo', 'Ringerike', 'Hole', 'Hønefoss'].map(loc => (
+                                    <button
+                                        key={loc}
+                                        onClick={() => toggleLocation(loc)}
+                                        className={`px-3 py-1.5 rounded-full text-xs border transition-all ${filters.locations.includes(loc)
+                                                ? 'bg-brass text-obsidian border-brass font-bold'
+                                                : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500'
+                                            }`}
+                                    >
+                                        {loc}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 2. Type & Price */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] uppercase tracking-wider text-stone-500 mb-2 block">Boligtype</label>
+                                <select
+                                    value={filters.type}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+                                    className="w-full bg-obsidian border border-white/20 rounded px-3 py-1.5 text-sm text-ink-primary"
+                                >
+                                    <option value="Alle">Alle typer</option>
+                                    <option value="Leilighet">Leilighet</option>
+                                    <option value="Enebolig">Enebolig</option>
+                                    <option value="Rekkehus">Rekkehus</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* 3. Price Range Input */}
+                        <div>
+                            <label className="text-[10px] uppercase tracking-wider text-stone-500 mb-2 block">Prisnivå (NOK)</label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    value={filters.minPrice}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, minPrice: Number(e.target.value) }))}
+                                    placeholder="Fra"
+                                    className="w-full bg-obsidian border border-white/20 rounded px-3 py-1.5 text-sm text-ink-primary"
+                                />
+                                <span className="text-stone-500">-</span>
+                                <input
+                                    type="number"
+                                    value={filters.maxPrice}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: Number(e.target.value) }))}
+                                    placeholder="Til"
+                                    className="w-full bg-obsidian border border-white/20 rounded px-3 py-1.5 text-sm text-ink-primary"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -114,11 +200,6 @@ export default function Market() {
 
             {/* Tab Content */}
             {activeTab === 'overview' && (() => {
-                const filteredProperties = liveProperties.filter(p =>
-                    (p.address?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                    (p.city?.toLowerCase().includes(searchQuery.toLowerCase()))
-                );
-
                 return (
                     <div className="space-y-6">
                         {/* Property Carousel - Kuppeliste */}
@@ -128,8 +209,8 @@ export default function Market() {
                             </div>
                         ) : (
                             <PropertyCarousel
-                                title={searchQuery ? "Søkeresultater" : "Aktive Annonser"}
-                                subtitle={searchQuery ? `${filteredProperties.length} treff funnet` : "Siste boliger fra Finn.no analysert av AI"}
+                                title={filters.locations.length > 0 ? `Resultater i ${filters.locations.join(', ')}` : "Alle Annonser"}
+                                subtitle={`${filteredProperties.length} boliger funnet (Filter: ${filters.type}, ${filters.minPrice / 1000000}-${filters.maxPrice / 1000000}M)`}
                                 properties={filteredProperties}
                             />
                         )}
@@ -138,6 +219,7 @@ export default function Market() {
                         {filteredProperties.length > 0 && (
                             <div className="velvet-card p-4 flex items-center gap-4">
                                 <div className="w-24 h-24 rounded-lg bg-stone-800 flex items-center justify-center overflow-hidden">
+                                    {/* ... keeping existing demo card logic for now, using first filtered prop ... */}
                                     <img
                                         src={filteredProperties[0].image_url || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=200&h=200&fit=crop"}
                                         alt="Property"
