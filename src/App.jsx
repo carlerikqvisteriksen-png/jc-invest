@@ -11,6 +11,12 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalValue: 0,
+    propertyCount: 0,
+    monthlyRent: 0,
+    changeLastMonth: '+0%' // Placeholder for now, requires historical data
+  });
 
   // Check auth state on mount
   useEffect(() => {
@@ -19,6 +25,7 @@ function App() {
       if (supabase) {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
+        if (user) loadDashboardData();
       }
       setIsLoading(false);
     };
@@ -27,15 +34,37 @@ function App() {
     // Listen for auth changes
     const { data: { subscription } } = onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) loadDashboardData();
     });
 
     return () => subscription?.unsubscribe();
   }, []);
 
+  const loadDashboardData = async () => {
+    try {
+      // Import dynamically to avoid circular dependencies if any
+      const { getProperties } = await import('./lib/database');
+      const properties = await getProperties();
+
+      const totalValue = properties.reduce((sum, p) => sum + (p.current_value || p.purchase_price || 0), 0);
+      const propertyCount = properties.length;
+
+      setDashboardStats({
+        totalValue,
+        propertyCount,
+        monthlyRent: properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0),
+        changeLastMonth: '+0%' // Future: Calculate based on history
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
       setUser(null);
+      setDashboardStats({ totalValue: 0, propertyCount: 0, monthlyRent: 0, changeLastMonth: '+0%' });
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -54,6 +83,8 @@ function App() {
   if (!user) {
     return <Login onLogin={setUser} />;
   }
+
+  const formatPrice = (num) => new Intl.NumberFormat('nb-NO').format(num);
 
   return (
     <div className="min-h-screen bg-obsidian text-ink-primary font-sans selection:bg-brass selection:text-obsidian relative overflow-x-hidden">
@@ -121,39 +152,39 @@ function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Stat Card 1 */}
-                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
+                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer" onClick={() => setActiveTab('portfolio')}>
                   <div className="flex justify-between items-start mb-2">
                     <span className="label-data">Total Balanse</span>
                     <Wallet className="w-4 h-4 text-brass/60" />
                   </div>
-                  <div className="text-2xl font-serif text-ink-primary">kr 2,450,000</div>
+                  <div className="text-2xl font-serif text-ink-primary">kr {formatPrice(dashboardStats.totalValue)}</div>
                   <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
-                    <span>+12.5%</span>
+                    <span>{dashboardStats.changeLastMonth}</span>
                     <span className="text-stone-light">siste mnd</span>
                   </div>
                 </div>
 
                 {/* Stat Card 2 */}
-                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
+                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer" onClick={() => setActiveTab('portfolio')}>
                   <div className="flex justify-between items-start mb-2">
                     <span className="label-data">Eiendom</span>
                     <Building2 className="w-4 h-4 text-brass/60" />
                   </div>
-                  <div className="text-2xl font-serif text-ink-primary">kr 8,200,000</div>
+                  <div className="text-2xl font-serif text-ink-primary">kr {formatPrice(dashboardStats.totalValue)}</div>
                   <div className="text-xs text-stone-light mt-1">
-                    4 Enheter
+                    {dashboardStats.propertyCount} Enheter
                   </div>
                 </div>
 
                 {/* Stat Card 3 */}
-                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer">
+                <div className="card-compact group hover:border-brass/30 transition-all cursor-pointer" onClick={() => setActiveTab('council')}>
                   <div className="flex justify-between items-start mb-2">
                     <span className="label-data">AI Råd</span>
                     <Bot className="w-4 h-4 text-brass/60" />
                   </div>
                   <div className="text-xl font-serif text-ink-primary">Avventer</div>
                   <div className="text-xs text-stone-light mt-1">
-                    Siste: "Kjøp i Oslo Øst"
+                    Siste: "Ingen råd enda"
                   </div>
                 </div>
               </div>
