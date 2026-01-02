@@ -29,9 +29,9 @@ export default function Market() {
     // Filters
     const [filters, setFilters] = useState({
         locations: ['Oslo', 'Ringerike', 'Hole'], // Default active locations
-        type: 'Leilighet',
-        minPrice: 2500000,
-        maxPrice: 3500000
+        type: 'Alle',
+        minPrice: 0,
+        maxPrice: 0
     });
 
     useEffect(() => {
