@@ -133,6 +133,8 @@ export default function PropertyForm({ property = null, onClose, onSaved }) {
                 current_value: formData.current_value ? parseInt(formData.current_value) : null,
                 monthly_rent: formData.monthly_rent ? parseInt(formData.monthly_rent) : null,
                 sold_price: formData.sold_price ? parseInt(formData.sold_price) : null,
+                sold_date: formData.sold_date || null,
+                lease_end_date: formData.lease_end_date || null,
             };
 
             let result;
