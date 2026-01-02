@@ -98,7 +98,7 @@
         },
         {
             "parameters": {
-                "prompt": "=Du er en data-ekstraheringsekspert for norske eiendomsannonser.\n\nFra følgende HTML fra Finn.no boligsøk, ekstraher de første 10 boligannonsene og returner dem som en JSON-array.\n\nFor HVER bolig du finner, ekstraher følgende felt:\n- finncode: Finn-koden fra URL eller data-attributt (f.eks. \"123456789\")\n- address (fulladresse)\n- city (by)\n- postal_code (postnummer)\n- price (salgspris som TALL)\n- sqm (areal i m² som TALL)\n- bedrooms (antall soverom som TALL)\n- property_type (boligtype)\n- image_url (URL til hovedbilde)\n- finn_url (full URL til annonse)\n\nREGLER:\n1. Returner KUN gyldig JSON array\n2. Priser og tall må være rene tall (4500000, ikke 4 500 000)\n3. Hvis felt mangler, sett null\n\nHTML INPUT:\n{{ $json.data.substring(0, 30000) }}"
+                "prompt": "=Du er en data-ekstraheringsekspert for norske eiendomsannonser.\n\nFra følgende HTML fra Finn.no boligsøk, ekstraher de første 50 boligannonsene og returner dem som en JSON-array.\n\nFor HVER bolig du finner, ekstraher følgende felt:\n- finncode: Finn-koden fra URL eller data-attributt (f.eks. \"123456789\")\n- address (fulladresse)\n- city (by)\n- postal_code (postnummer)\n- price (salgspris som TALL)\n- sqm (areal i m² som TALL)\n- bedrooms (antall soverom som TALL)\n- property_type (boligtype)\n- image_url (URL til hovedbilde)\n- finn_url (full URL til annonse)\n\nREGLER:\n1. Returner KUN gyldig JSON array\n2. Priser og tall må være rene tall (4500000, ikke 4 500 000)\n3. Hvis felt mangler, sett null\n\nHTML INPUT:\n{{ $json.data.substring(0, 60000) }}"
             },
             "id": "basic-llm-chain",
             "name": "Basic LLM Chain",

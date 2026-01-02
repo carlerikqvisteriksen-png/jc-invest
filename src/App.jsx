@@ -3,8 +3,9 @@ import Council from './components/Council';
 import Market from './components/Market';
 import Login from './components/Login';
 import PropertyList from './components/PropertyList';
+import Library from './components/Library';
 import { supabase, signOut, onAuthStateChange } from './lib/supabase';
-import { Bot, LineChart, Building2, ChevronRight, Lock, LogOut, ScrollText, Wallet, User, Settings } from 'lucide-react';
+import { Bot, LineChart, Building2, ChevronRight, Lock, LogOut, ScrollText, Wallet, User, Settings, Book } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -117,6 +118,7 @@ function App() {
             <button onClick={() => setActiveTab('portfolio')} className={`hover:text-brass transition-colors ${activeTab === 'portfolio' ? 'text-brass' : ''}`}>Portefølje</button>
             <button onClick={() => setActiveTab('council')} className={`hover:text-brass transition-colors ${activeTab === 'council' ? 'text-brass' : ''}`}>Rådet</button>
             <button onClick={() => setActiveTab('market')} className={`hover:text-brass transition-colors ${activeTab === 'market' ? 'text-brass' : ''}`}>Marked</button>
+            <button onClick={() => setActiveTab('library')} className={`hover:text-brass transition-colors ${activeTab === 'library' ? 'text-brass' : ''}`}>Bibliotek</button>
             <button onClick={() => setActiveTab('settings')} className={`hover:text-brass transition-colors ${activeTab === 'settings' ? 'text-brass' : ''}`}>Innstillinger</button>
           </nav>
 
@@ -286,6 +288,12 @@ function App() {
         {activeTab === 'portfolio' && (
           <main className="w-full fade-in">
             <PropertyList />
+          </main>
+        )}
+
+        {activeTab === 'library' && (
+          <main className="w-full fade-in">
+            <Library />
           </main>
         )}
 
