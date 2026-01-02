@@ -1,0 +1,317 @@
+{
+    "name": "JC Invest - Property Data Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hoursInterval": 24
+                        }
+                    ]
+                }
+            },
+            "id": "schedule-trigger",
+            "name": "Daily Schedule",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                180,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "property-agent",
+                "responseMode": "responseNode"
+            },
+            "id": "webhook-trigger",
+            "name": "Manual Trigger Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                180,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "values": {
+                    "string": [
+                        {
+                            "name": "searchCity",
+                            "value": "={{ $json.city || 'Oslo' }}"
+                        },
+                        {
+                            "name": "minPrice",
+                            "value": "={{ $json.minPrice || '2000000' }}"
+                        },
+                        {
+                            "name": "maxPrice",
+                            "value": "={{ $json.maxPrice || '10000000' }}"
+                        },
+                        {
+                            "name": "propertyType",
+                            "value": "={{ $json.propertyType || 'realestate-homes' }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "set-search-params",
+            "name": "Set Search Parameters",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                400,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "url": "=https://www.finn.no/{{ $json.propertyType }}/search.html?location=0.{{ $json.searchCity === 'Oslo' ? '20061' : $json.searchCity === 'Bergen' ? '20220' : $json.searchCity === 'Trondheim' ? '20016' : '20061' }}&price_from={{ $json.minPrice }}&price_to={{ $json.maxPrice }}&sort=PUBLISHED_DESC",
+                "options": {
+                    "response": {
+                        "response": {
+                            "responseFormat": "text"
+                        }
+                    }
+                }
+            },
+            "id": "fetch-finn-search",
+            "name": "Fetch Finn.no Search",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                600,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "modelId": "gemini-2.0-flash",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "=Du er en data-ekstraheringsekspert. Fra følgende HTML fra Finn.no boligsøk, ekstraher de 10 første boligene og returner dem som en JSON-array.\n\nFor hver bolig, ekstraher:\n- finncode (Finn-koden fra URL eller data-attributt)\n- address (fulladressen)\n- city (byen)\n- postal_code (postnummer hvis tilgjengelig)\n- price (salgspris som tall uten formatering)\n- sqm (areal i m² som tall)\n- bedrooms (antall soverom hvis tilgjengelig)\n- property_type (Leilighet/Enebolig/Rekkehus osv)\n- image_url (hovedbildets URL)\n- finn_url (full URL til annonsen)\n- published_date (publiseringsdato hvis tilgjengelig)\n\nReturner KUN en gyldig JSON-array, ingen annen tekst.\n\nHTML:\n{{ $json.data.substring(0, 50000) }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "temperature": 0.1
+                }
+            },
+            "id": "extract-with-ai",
+            "name": "AI Extract Properties",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                820,
+                400
+            ],
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse the AI response and clean up the data\nconst aiResponse = $input.first().json.text || $input.first().json.message?.content || '';\n\n// Extract JSON from the response\nlet jsonMatch = aiResponse.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\nif (!jsonMatch) {\n    return [{ json: { error: 'Could not parse AI response', raw: aiResponse } }];\n}\n\ntry {\n    const properties = JSON.parse(jsonMatch[0]);\n    \n    // Clean and validate each property\n    const cleanedProperties = properties.map(p => ({\n        finncode: String(p.finncode || '').trim(),\n        address: String(p.address || '').trim(),\n        city: String(p.city || '').trim(),\n        postal_code: String(p.postal_code || '').trim(),\n        price: parseInt(String(p.price).replace(/\\D/g, '')) || null,\n        sqm: parseInt(String(p.sqm).replace(/\\D/g, '')) || null,\n        bedrooms: parseInt(p.bedrooms) || null,\n        property_type: String(p.property_type || 'Leilighet').trim(),\n        image_url: String(p.image_url || '').trim(),\n        finn_url: String(p.finn_url || '').trim(),\n        published_date: p.published_date || null,\n        price_per_sqm: p.price && p.sqm ? Math.round(p.price / p.sqm) : null,\n        source: 'finn.no',\n        scraped_at: new Date().toISOString()\n    })).filter(p => p.address && p.price);\n    \n    return cleanedProperties.map(p => ({ json: p }));\n} catch (e) {\n    return [{ json: { error: 'JSON parse error: ' + e.message, raw: aiResponse } }];\n}"
+            },
+            "id": "parse-properties",
+            "name": "Parse & Clean Data",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1040,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "upsert",
+                "schema": "public",
+                "table": "market_properties",
+                "filterColumns": [
+                    "finncode"
+                ],
+                "columns": "finncode,address,city,postal_code,price,sqm,bedrooms,property_type,image_url,finn_url,price_per_sqm,source,scraped_at"
+            },
+            "id": "save-to-supabase",
+            "name": "Save to Supabase",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                1260,
+                400
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "aggregate": "aggregateAllItemData",
+                "options": {}
+            },
+            "id": "aggregate-results",
+            "name": "Aggregate Results",
+            "type": "n8n-nodes-base.aggregate",
+            "typeVersion": 1,
+            "position": [
+                1480,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ { success: true, count: $json.data.length, properties: $json.data, timestamp: new Date().toISOString() } }}"
+            },
+            "id": "respond-webhook",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                1700,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "leftValue": "={{ $json.error }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "empty",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "id": "check-for-errors",
+            "name": "Check for Errors",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                1260,
+                600
+            ]
+        }
+    ],
+    "connections": {
+        "Daily Schedule": {
+            "main": [
+                [
+                    {
+                        "node": "Set Search Parameters",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Manual Trigger Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Set Search Parameters",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Search Parameters": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Finn.no Search",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Finn.no Search": {
+            "main": [
+                [
+                    {
+                        "node": "AI Extract Properties",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Extract Properties": {
+            "main": [
+                [
+                    {
+                        "node": "Parse & Clean Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse & Clean Data": {
+            "main": [
+                [
+                    {
+                        "node": "Save to Supabase",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Check for Errors",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save to Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate Results": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    }
+}
