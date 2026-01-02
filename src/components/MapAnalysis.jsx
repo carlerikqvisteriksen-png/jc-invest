@@ -33,35 +33,72 @@ function MapUpdater({ center }) {
 
 export default function MapAnalysis({ properties = [] }) {
     const [mapCenter, setMapCenter] = useState(CENTERS['Oslo']);
+    const [geocodedProperties, setGeocodedProperties] = useState([]);
 
-    // Process properties to ensure they have coordinates
-    // If no lat/lng, we fuzzy match them around their city center so they show up
-    const mapMarkers = useMemo(() => {
-        return properties.map(p => {
-            const city = p.city ? p.city.trim() : 'Oslo';
-            let lat = p.lat;
-            let lng = p.lng;
+    // Geocoding logic
+    useEffect(() => {
+        const fetchCoords = async () => {
+            const updatedProps = [...properties];
+            let hasChanges = false;
 
-            // If missing coords, generate fuzzy coords around city center
-            if (!lat || !lng) {
-                const center = CENTERS[city] || CENTERS['Oslo'];
-                // Add random jitter (~1-2km radius)
-                lat = center[0] + (Math.random() - 0.5) * 0.04;
-                lng = center[1] + (Math.random() - 0.5) * 0.04;
+            for (let i = 0; i < updatedProps.length; i++) {
+                const p = updatedProps[i];
+                // Only geocode if we haven't already and don't have valid coords
+                if (!p.lat && !p.lng && !p._geocoded) {
+                    try {
+                        // Respect Nominatim rate limit (1 req/sec)
+                        await new Promise(resolve => setTimeout(resolve, 1100));
+
+                        const query = `${p.address}, ${p.city}, Norway`;
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+
+                        if (data && data.length > 0) {
+                            updatedProps[i] = {
+                                ...p,
+                                lat: parseFloat(data[0].lat),
+                                lng: parseFloat(data[0].lon),
+                                _geocoded: true
+                            };
+                            hasChanges = true;
+                            // Update state incrementally to show progress
+                            setGeocodedProperties([...updatedProps]);
+                        }
+                    } catch (err) {
+                        console.error("Geocoding error for", p.address, err);
+                    }
+                } else if ((p.lat || p.lng) && !p._geocoded) {
+                    // Prop already has coords from DB
+                    updatedProps[i] = { ...p, _geocoded: true };
+                    hasChanges = true;
+                }
             }
 
-            return { ...p, lat, lng };
-        });
-    }, [properties]);
+            if (hasChanges) {
+                setGeocodedProperties(updatedProps);
+            }
+        };
+
+        if (properties.length > 0) {
+            // Initialize with existing properties first
+            setGeocodedProperties(properties);
+            fetchCoords();
+        }
+    }, [properties.length]); // Only restart if property count changes (e.g. filter)
+
+    // Use geocoded properties for markers
+    const mapMarkers = useMemo(() => {
+        return geocodedProperties.filter(p => p.lat && p.lng);
+    }, [geocodedProperties]);
 
     // Update center based on first property or filter
     useEffect(() => {
         if (mapMarkers.length > 0) {
-            // Find centroid or just use first
+            // Use the first filtered/geocoded property to center
             const first = mapMarkers[0];
             setMapCenter([first.lat, first.lng]);
         }
-    }, [mapMarkers]);
+    }, [mapMarkers.length]); // Minimize re-centering jitters
 
     return (
         <div className="velvet-card overflow-hidden fade-in h-[600px] flex flex-col">
@@ -69,10 +106,10 @@ export default function MapAnalysis({ properties = [] }) {
             <div className="flex items-center justify-between p-4 border-b border-white/10 z-10 bg-obsidian">
                 <h3 className="text-lg font-serif text-brass flex items-center gap-2">
                     <MapIcon className="w-5 h-5" />
-                    Eiendomskart
+                    Eiendomskart <span className="text-xs text-stone-500 font-sans ml-2">(Henter nøyaktig posisjon...)</span>
                 </h3>
                 <div className="text-sm text-stone-400">
-                    Viser {mapMarkers.length} eiendommer
+                    Viser {mapMarkers.length} av {properties.length} eiendommer
                 </div>
             </div>
 
@@ -80,7 +117,7 @@ export default function MapAnalysis({ properties = [] }) {
             <div className="flex-1 relative z-0">
                 <MapContainer
                     center={mapCenter}
-                    zoom={10}
+                    zoom={12}
                     style={{ height: '100%', width: '100%' }}
                     className="z-0"
                 >
@@ -92,7 +129,7 @@ export default function MapAnalysis({ properties = [] }) {
                     <MapUpdater center={mapCenter} />
 
                     {mapMarkers.map((p, idx) => (
-                        <Marker key={idx} position={[p.lat, p.lng]}>
+                        <Marker key={p.id || idx} position={[p.lat, p.lng]}>
                             <Popup>
                                 <div className="p-2 min-w-[200px]">
                                     <h4 className="font-bold text-sm mb-1">{p.address}</h4>
