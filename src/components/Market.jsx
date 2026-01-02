@@ -45,7 +45,7 @@ export default function Market() {
         try {
             // Fetch more properties to allow for client-side filtering
             const [marketData, comparableData] = await Promise.all([
-                getMarketProperties({ limit: 100 }),
+                getMarketProperties({ limit: 300 }),
                 getComparableSales({ limit: 50 })
             ]);
             setLiveProperties(marketData);
@@ -67,9 +67,12 @@ export default function Market() {
         // Location (City/Municipality checks)
         // Note: Finn data often puts municipality in 'location' or 'city'. 
         // We check if the property's city/location matches ANY of the selected filter locations.
-        const locationMatch = filters.locations.length === 0 || filters.locations.some(loc =>
-            p.city?.includes(loc) || p.address?.includes(loc) || (loc === 'Hønefoss' && p.city?.includes('Ringerike'))
-        );
+        const locationMatch = filters.locations.length === 0 || filters.locations.some(loc => {
+            if (p.city?.includes(loc) || p.address?.includes(loc)) return true;
+            // Ringerike filter should also match Hønefoss
+            if (loc === 'Ringerike' && (p.city?.includes('Hønefoss') || p.address?.includes('Hønefoss'))) return true;
+            return false;
+        });
 
         // Type
         const typeMatch = !filters.type || p.property_type?.toLowerCase().includes(filters.type.toLowerCase()) || filters.type === 'Alle';
@@ -141,7 +144,7 @@ export default function Market() {
                         <div>
                             <label className="text-[10px] uppercase tracking-wider text-stone-500 mb-2 block">Områder</label>
                             <div className="flex flex-wrap gap-2">
-                                {['Oslo', 'Ringerike', 'Hole', 'Hønefoss'].map(loc => (
+                                {['Oslo', 'Ringerike', 'Hole'].map(loc => (
                                     <button
                                         key={loc}
                                         onClick={() => toggleLocation(loc)}
