@@ -149,9 +149,9 @@ export default function PropertyCarousel({
                             image={property.image_url || property.image}
                             location={property.city || property.location}
                             link={property.finn_url || property.link}
-                            price={property.price || property.sold_price}
                             priceLabel={property.is_sold ? "NYLIG SOLGT" : "ANTATT PRIS"}
                             isSold={property.is_sold ?? property.isSold ?? false}
+                            score={property.score}
                         />
                     </div>
                 ))}

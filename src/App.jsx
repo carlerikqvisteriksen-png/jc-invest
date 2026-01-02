@@ -4,7 +4,7 @@ import Market from './components/Market';
 import Login from './components/Login';
 import PropertyList from './components/PropertyList';
 import { supabase, signOut, onAuthStateChange } from './lib/supabase';
-import { Bot, LineChart, Building2, ChevronRight, Lock, LogOut, ScrollText, Wallet, User } from 'lucide-react';
+import { Bot, LineChart, Building2, ChevronRight, Lock, LogOut, ScrollText, Wallet, User, Settings } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -271,6 +271,51 @@ function App() {
           </main>
         )}
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-obsidian-dark/95 backdrop-blur-md border-t border-white/10 md:hidden z-50 pb-safe">
+        <div className="flex justify-around items-center h-16">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'dashboard' ? 'text-brass' : 'text-stone-500'}`}
+          >
+            <Building2 className="w-5 h-5" />
+            <span className="text-[10px] uppercase tracking-wider">Hjem</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('portfolio')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'portfolio' ? 'text-brass' : 'text-stone-500'}`}
+          >
+            <Wallet className="w-5 h-5" />
+            <span className="text-[10px] uppercase tracking-wider">Portefølje</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('council')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'council' ? 'text-brass' : 'text-stone-500'}`}
+          >
+            <Bot className="w-5 h-5" />
+            <span className="text-[10px] uppercase tracking-wider">Rådet</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('market')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'market' ? 'text-brass' : 'text-stone-500'}`}
+          >
+            <LineChart className="w-5 h-5" />
+            <span className="text-[10px] uppercase tracking-wider">Marked</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'settings' ? 'text-brass' : 'text-stone-500'}`}
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] uppercase tracking-wider">Mer</span>
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }
