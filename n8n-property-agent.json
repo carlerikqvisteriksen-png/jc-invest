@@ -12,12 +12,12 @@
                     ]
                 }
             },
-            "id": "schedule-trigger",
+            "id": "1",
             "name": "Daily Schedule",
             "type": "n8n-nodes-base.scheduleTrigger",
             "typeVersion": 1.1,
             "position": [
-                180,
+                240,
                 300
             ]
         },
@@ -25,53 +25,60 @@
             "parameters": {
                 "httpMethod": "POST",
                 "path": "property-agent",
-                "responseMode": "responseNode"
+                "responseMode": "responseNode",
+                "options": {}
             },
-            "id": "webhook-trigger",
+            "id": "2",
             "name": "Manual Trigger Webhook",
             "type": "n8n-nodes-base.webhook",
             "typeVersion": 2,
             "position": [
-                180,
+                240,
                 500
-            ]
+            ],
+            "webhookId": "property-agent"
         },
         {
             "parameters": {
-                "values": {
-                    "string": [
+                "mode": "manual",
+                "duplicateItem": false,
+                "assignments": {
+                    "assignments": [
                         {
+                            "id": "city",
                             "name": "searchCity",
-                            "value": "={{ $json.city || 'Oslo' }}"
+                            "value": "Oslo",
+                            "type": "string"
                         },
                         {
+                            "id": "minPrice",
                             "name": "minPrice",
-                            "value": "={{ $json.minPrice || '2000000' }}"
+                            "value": "3000000",
+                            "type": "string"
                         },
                         {
+                            "id": "maxPrice",
                             "name": "maxPrice",
-                            "value": "={{ $json.maxPrice || '10000000' }}"
-                        },
-                        {
-                            "name": "propertyType",
-                            "value": "={{ $json.propertyType || 'realestate-homes' }}"
+                            "value": "8000000",
+                            "type": "string"
                         }
                     ]
                 },
                 "options": {}
             },
-            "id": "set-search-params",
+            "id": "3",
             "name": "Set Search Parameters",
             "type": "n8n-nodes-base.set",
             "typeVersion": 3.4,
             "position": [
-                400,
+                460,
                 400
             ]
         },
         {
             "parameters": {
-                "url": "=https://www.finn.no/{{ $json.propertyType }}/search.html?location=0.{{ $json.searchCity === 'Oslo' ? '20061' : $json.searchCity === 'Bergen' ? '20220' : $json.searchCity === 'Trondheim' ? '20016' : '20061' }}&price_from={{ $json.minPrice }}&price_to={{ $json.maxPrice }}&sort=PUBLISHED_DESC",
+                "method": "GET",
+                "url": "=https://www.finn.no/realestate/homes/search.html?location=0.20061&price_from={{ $json.minPrice }}&price_to={{ $json.maxPrice }}&sort=PUBLISHED_DESC",
                 "options": {
                     "response": {
                         "response": {
@@ -80,139 +87,100 @@
                     }
                 }
             },
-            "id": "fetch-finn-search",
+            "id": "4",
             "name": "Fetch Finn.no Search",
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4.2,
             "position": [
-                600,
+                680,
                 400
             ]
         },
         {
             "parameters": {
-                "modelId": "gemini-2.0-flash",
-                "messages": {
-                    "messageValues": [
-                        {
-                            "message": "=Du er en data-ekstraheringsekspert. Fra følgende HTML fra Finn.no boligsøk, ekstraher de 10 første boligene og returner dem som en JSON-array.\n\nFor hver bolig, ekstraher:\n- finncode (Finn-koden fra URL eller data-attributt)\n- address (fulladressen)\n- city (byen)\n- postal_code (postnummer hvis tilgjengelig)\n- price (salgspris som tall uten formatering)\n- sqm (areal i m² som tall)\n- bedrooms (antall soverom hvis tilgjengelig)\n- property_type (Leilighet/Enebolig/Rekkehus osv)\n- image_url (hovedbildets URL)\n- finn_url (full URL til annonsen)\n- published_date (publiseringsdato hvis tilgjengelig)\n\nReturner KUN en gyldig JSON-array, ingen annen tekst.\n\nHTML:\n{{ $json.data.substring(0, 50000) }}"
-                        }
-                    ]
-                },
+                "promptType": "define",
+                "text": "=Du er en data-ekstraheringsekspert for norske eiendomsannonser.\n\nFra følgende HTML fra Finn.no boligsøk, ekstraher de første 10 boligannonsene og returner dem som en JSON-array.\n\nFor HVER bolig du finner, ekstraher følgende felt:\n- finncode: Finn-koden fra URL eller data-attributt (f.eks. \"123456789\")\n- address: Full adresse (f.eks. \"Storgata 15\")\n- city: By (f.eks. \"Oslo\")\n- postal_code: Postnummer hvis tilgjengelig (f.eks. \"0182\")\n- price: Salgspris som TALL uten formattering (f.eks. 4500000)\n- sqm: Areal i m² som TALL (f.eks. 75)\n- bedrooms: Antall soverom som TALL hvis tilgjengelig\n- property_type: Boligtype (\"Leilighet\", \"Enebolig\", \"Rekkehus\" osv)\n- image_url: URL til hovedbildet\n- finn_url: Full URL til annonsen på Finn.no\n\nVIKTIG REGLER:\n1. Returner KUN gyldig JSON, ingen annen tekst\n2. Hvis et felt ikke finnes, sett det til null\n3. Priser og tall skal være rene tall uten punktum eller mellomrom\n4. Start svaret med [ og avslutt med ]\n\nHTML:\n{{ $json.data.substring(0, 40000) }}",
                 "options": {
                     "temperature": 0.1
                 }
             },
-            "id": "extract-with-ai",
+            "id": "5",
             "name": "AI Extract Properties",
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
-                820,
+                900,
                 400
             ],
             "credentials": {
                 "googleGeminiApi": {
-                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
-                    "name": "Google Gemini account"
+                    "id": "REPLACE_WITH_YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini"
                 }
             }
         },
         {
             "parameters": {
-                "jsCode": "// Parse the AI response and clean up the data\nconst aiResponse = $input.first().json.text || $input.first().json.message?.content || '';\n\n// Extract JSON from the response\nlet jsonMatch = aiResponse.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\nif (!jsonMatch) {\n    return [{ json: { error: 'Could not parse AI response', raw: aiResponse } }];\n}\n\ntry {\n    const properties = JSON.parse(jsonMatch[0]);\n    \n    // Clean and validate each property\n    const cleanedProperties = properties.map(p => ({\n        finncode: String(p.finncode || '').trim(),\n        address: String(p.address || '').trim(),\n        city: String(p.city || '').trim(),\n        postal_code: String(p.postal_code || '').trim(),\n        price: parseInt(String(p.price).replace(/\\D/g, '')) || null,\n        sqm: parseInt(String(p.sqm).replace(/\\D/g, '')) || null,\n        bedrooms: parseInt(p.bedrooms) || null,\n        property_type: String(p.property_type || 'Leilighet').trim(),\n        image_url: String(p.image_url || '').trim(),\n        finn_url: String(p.finn_url || '').trim(),\n        published_date: p.published_date || null,\n        price_per_sqm: p.price && p.sqm ? Math.round(p.price / p.sqm) : null,\n        source: 'finn.no',\n        scraped_at: new Date().toISOString()\n    })).filter(p => p.address && p.price);\n    \n    return cleanedProperties.map(p => ({ json: p }));\n} catch (e) {\n    return [{ json: { error: 'JSON parse error: ' + e.message, raw: aiResponse } }];\n}"
+                "jsCode": "// Parse AI response and clean up data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const aiResponse = item.json.text || item.json.content || '';\n  \n  // Find JSON array in response\n  const jsonMatch = aiResponse.match(/\\[\\s*\\{[\\s\\S]*?\\}\\s*\\]/g);\n  \n  if (!jsonMatch) {\n    console.log('No JSON found in response');\n    continue;\n  }\n  \n  try {\n    const properties = JSON.parse(jsonMatch[0]);\n    \n    for (const p of properties) {\n      // Clean and validate each property\n      const cleaned = {\n        finncode: String(p.finncode || '').trim() || null,\n        address: String(p.address || '').trim() || null,\n        city: String(p.city || 'Oslo').trim(),\n        postal_code: String(p.postal_code || '').trim() || null,\n        price: parseInt(String(p.price || '').replace(/\\D/g, '')) || null,\n        sqm: parseInt(String(p.sqm || '').replace(/\\D/g, '')) || null,\n        bedrooms: parseInt(p.bedrooms) || null,\n        property_type: String(p.property_type || 'Leilighet').trim(),\n        image_url: String(p.image_url || '').trim() || null,\n        finn_url: String(p.finn_url || '').trim() || null,\n        price_per_sqm: null,\n        source: 'finn.no',\n        scraped_at: new Date().toISOString(),\n        status: 'active'\n      };\n      \n      // Calculate price per sqm\n      if (cleaned.price && cleaned.sqm && cleaned.sqm > 0) {\n        cleaned.price_per_sqm = Math.round(cleaned.price / cleaned.sqm);\n      }\n      \n      // Only add if we have minimum required data\n      if (cleaned.address && cleaned.price) {\n        results.push({ json: cleaned });\n      }\n    }\n  } catch (e) {\n    console.log('Parse error:', e.message);\n  }\n}\n\n// Return at least empty array\nif (results.length === 0) {\n  return [{ json: { error: 'No properties extracted', timestamp: new Date().toISOString() } }];\n}\n\nreturn results;"
             },
-            "id": "parse-properties",
+            "id": "6",
             "name": "Parse & Clean Data",
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
-                1040,
+                1120,
                 400
             ]
         },
         {
             "parameters": {
-                "operation": "upsert",
-                "schema": "public",
-                "table": "market_properties",
-                "filterColumns": [
-                    "finncode"
-                ],
-                "columns": "finncode,address,city,postal_code,price,sqm,bedrooms,property_type,image_url,finn_url,price_per_sqm,source,scraped_at"
+                "operation": "create",
+                "tableId": "market_properties",
+                "dataToSend": "autoMapInputData",
+                "options": {}
             },
-            "id": "save-to-supabase",
+            "id": "7",
             "name": "Save to Supabase",
             "type": "n8n-nodes-base.supabase",
             "typeVersion": 1,
             "position": [
-                1260,
+                1340,
                 400
             ],
             "credentials": {
                 "supabaseApi": {
-                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
-                    "name": "Supabase account"
+                    "id": "REPLACE_WITH_YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase"
                 }
             }
         },
         {
             "parameters": {
                 "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "properties",
                 "options": {}
             },
-            "id": "aggregate-results",
+            "id": "8",
             "name": "Aggregate Results",
             "type": "n8n-nodes-base.aggregate",
             "typeVersion": 1,
             "position": [
-                1480,
+                1560,
                 400
             ]
         },
         {
             "parameters": {
                 "respondWith": "json",
-                "responseBody": "={{ { success: true, count: $json.data.length, properties: $json.data, timestamp: new Date().toISOString() } }}"
+                "responseBody": "={\n  \"success\": true,\n  \"message\": \"Property data collected successfully\",\n  \"count\": {{ $json.properties.length }},\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}"
             },
-            "id": "respond-webhook",
+            "id": "9",
             "name": "Respond to Webhook",
             "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
+            "typeVersion": 1.1,
             "position": [
-                1700,
+                1780,
                 400
-            ]
-        },
-        {
-            "parameters": {
-                "conditions": {
-                    "options": {
-                        "caseSensitive": true,
-                        "leftValue": "",
-                        "typeValidation": "strict"
-                    },
-                    "conditions": [
-                        {
-                            "leftValue": "={{ $json.error }}",
-                            "rightValue": "",
-                            "operator": {
-                                "type": "string",
-                                "operation": "empty",
-                                "singleValue": true
-                            }
-                        }
-                    ],
-                    "combinator": "and"
-                }
-            },
-            "id": "check-for-errors",
-            "name": "Check for Errors",
-            "type": "n8n-nodes-base.if",
-            "typeVersion": 2,
-            "position": [
-                1260,
-                600
             ]
         }
     ],
@@ -279,11 +247,6 @@
                         "node": "Save to Supabase",
                         "type": "main",
                         "index": 0
-                    },
-                    {
-                        "node": "Check for Errors",
-                        "type": "main",
-                        "index": 0
                     }
                 ]
             ]
@@ -313,5 +276,10 @@
     },
     "settings": {
         "executionOrder": "v1"
-    }
+    },
+    "staticData": null,
+    "tags": [],
+    "triggerCount": 0,
+    "updatedAt": "2026-01-02T00:25:00.000Z",
+    "versionId": "1"
 }
