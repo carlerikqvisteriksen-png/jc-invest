@@ -12,12 +12,12 @@
                     ]
                 }
             },
-            "id": "1",
+            "id": "schedule-trigger",
             "name": "Daily Schedule",
             "type": "n8n-nodes-base.scheduleTrigger",
             "typeVersion": 1.1,
             "position": [
-                240,
+                220,
                 300
             ]
         },
@@ -28,12 +28,12 @@
                 "responseMode": "responseNode",
                 "options": {}
             },
-            "id": "2",
+            "id": "webhook-trigger",
             "name": "Manual Trigger Webhook",
             "type": "n8n-nodes-base.webhook",
             "typeVersion": 2,
             "position": [
-                240,
+                220,
                 500
             ],
             "webhookId": "property-agent"
@@ -66,12 +66,12 @@
                 },
                 "options": {}
             },
-            "id": "3",
+            "id": "set-params",
             "name": "Set Search Parameters",
             "type": "n8n-nodes-base.set",
             "typeVersion": 3.4,
             "position": [
-                460,
+                440,
                 400
             ]
         },
@@ -87,30 +87,42 @@
                     }
                 }
             },
-            "id": "4",
+            "id": "fetch-finn",
             "name": "Fetch Finn.no Search",
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4.2,
             "position": [
-                680,
+                660,
                 400
             ]
         },
         {
             "parameters": {
-                "promptType": "define",
-                "text": "=Du er en data-ekstraheringsekspert for norske eiendomsannonser.\n\nFra følgende HTML fra Finn.no boligsøk, ekstraher de første 10 boligannonsene og returner dem som en JSON-array.\n\nFor HVER bolig du finner, ekstraher følgende felt:\n- finncode: Finn-koden fra URL eller data-attributt (f.eks. \"123456789\")\n- address: Full adresse (f.eks. \"Storgata 15\")\n- city: By (f.eks. \"Oslo\")\n- postal_code: Postnummer hvis tilgjengelig (f.eks. \"0182\")\n- price: Salgspris som TALL uten formattering (f.eks. 4500000)\n- sqm: Areal i m² som TALL (f.eks. 75)\n- bedrooms: Antall soverom som TALL hvis tilgjengelig\n- property_type: Boligtype (\"Leilighet\", \"Enebolig\", \"Rekkehus\" osv)\n- image_url: URL til hovedbildet\n- finn_url: Full URL til annonsen på Finn.no\n\nVIKTIG REGLER:\n1. Returner KUN gyldig JSON, ingen annen tekst\n2. Hvis et felt ikke finnes, sett det til null\n3. Priser og tall skal være rene tall uten punktum eller mellomrom\n4. Start svaret med [ og avslutt med ]\n\nHTML:\n{{ $json.data.substring(0, 40000) }}",
+                "prompt": "=Du er en data-ekstraheringsekspert for norske eiendomsannonser.\n\nFra følgende HTML fra Finn.no boligsøk, ekstraher de første 10 boligannonsene og returner dem som en JSON-array.\n\nFor HVER bolig du finner, ekstraher følgende felt:\n- finncode: Finn-koden fra URL eller data-attributt (f.eks. \"123456789\")\n- address (fulladresse)\n- city (by)\n- postal_code (postnummer)\n- price (salgspris som TALL)\n- sqm (areal i m² som TALL)\n- bedrooms (antall soverom som TALL)\n- property_type (boligtype)\n- image_url (URL til hovedbilde)\n- finn_url (full URL til annonse)\n\nREGLER:\n1. Returner KUN gyldig JSON array\n2. Priser og tall må være rene tall (4500000, ikke 4 500 000)\n3. Hvis felt mangler, sett null\n\nHTML INPUT:\n{{ $json.data.substring(0, 30000) }}"
+            },
+            "id": "basic-llm-chain",
+            "name": "Basic LLM Chain",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1.4,
+            "position": [
+                880,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "modelName": "models/gemini-1.5-flash",
                 "options": {
                     "temperature": 0.1
                 }
             },
-            "id": "5",
-            "name": "AI Extract Properties",
+            "id": "gemini-model",
+            "name": "Google Gemini Chat Model",
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
-                900,
-                400
+                880,
+                600
             ],
             "credentials": {
                 "googleGeminiApi": {
@@ -121,14 +133,14 @@
         },
         {
             "parameters": {
-                "jsCode": "// Parse AI response and clean up data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const aiResponse = item.json.text || item.json.content || '';\n  \n  // Find JSON array in response\n  const jsonMatch = aiResponse.match(/\\[\\s*\\{[\\s\\S]*?\\}\\s*\\]/g);\n  \n  if (!jsonMatch) {\n    console.log('No JSON found in response');\n    continue;\n  }\n  \n  try {\n    const properties = JSON.parse(jsonMatch[0]);\n    \n    for (const p of properties) {\n      // Clean and validate each property\n      const cleaned = {\n        finncode: String(p.finncode || '').trim() || null,\n        address: String(p.address || '').trim() || null,\n        city: String(p.city || 'Oslo').trim(),\n        postal_code: String(p.postal_code || '').trim() || null,\n        price: parseInt(String(p.price || '').replace(/\\D/g, '')) || null,\n        sqm: parseInt(String(p.sqm || '').replace(/\\D/g, '')) || null,\n        bedrooms: parseInt(p.bedrooms) || null,\n        property_type: String(p.property_type || 'Leilighet').trim(),\n        image_url: String(p.image_url || '').trim() || null,\n        finn_url: String(p.finn_url || '').trim() || null,\n        price_per_sqm: null,\n        source: 'finn.no',\n        scraped_at: new Date().toISOString(),\n        status: 'active'\n      };\n      \n      // Calculate price per sqm\n      if (cleaned.price && cleaned.sqm && cleaned.sqm > 0) {\n        cleaned.price_per_sqm = Math.round(cleaned.price / cleaned.sqm);\n      }\n      \n      // Only add if we have minimum required data\n      if (cleaned.address && cleaned.price) {\n        results.push({ json: cleaned });\n      }\n    }\n  } catch (e) {\n    console.log('Parse error:', e.message);\n  }\n}\n\n// Return at least empty array\nif (results.length === 0) {\n  return [{ json: { error: 'No properties extracted', timestamp: new Date().toISOString() } }];\n}\n\nreturn results;"
+                "jsCode": "// Parse AI response and clean up data\nconst text = $input.first().json.text || '';\nconst results = [];\n\n// Find JSON array in response\nconst jsonMatch = text.match(/\\[\\s*\\{[\\s\\S]*?\\}\\s*\\]/);\n\nif (jsonMatch) {\n  try {\n    const properties = JSON.parse(jsonMatch[0]);\n    \n    for (const p of properties) {\n      // Clean and validate each property\n      if (p.address && p.price) {\n        results.push({\n            json: {\n                finncode: String(p.finncode || '').trim() || null,\n                address: String(p.address || '').trim(),\n                city: String(p.city || 'Oslo').trim(),\n                postal_code: String(p.postal_code || '').trim() || null,\n                price: parseInt(String(p.price).replace(/\\D/g, '')) || null,\n                sqm: parseInt(String(p.sqm).replace(/\\D/g, '')) || null,\n                bedrooms: parseInt(p.bedrooms) || null,\n                property_type: String(p.property_type || 'Leilighet').trim(),\n                image_url: String(p.image_url || '').trim() || null,\n                finn_url: String(p.finn_url || '').trim() || null,\n                source: 'finn.no',\n                scraped_at: new Date().toISOString(),\n                status: 'active'\n            }\n        });\n      }\n    }\n  } catch (e) {\n    console.log('Parse error:', e.message);\n  }\n}\n\nif (results.length === 0) {\n    return [{ json: { error: 'No properties found', raw: text } }];\n}\n\nreturn results;"
             },
-            "id": "6",
+            "id": "parse-data",
             "name": "Parse & Clean Data",
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
-                1120,
+                1100,
                 400
             ]
         },
@@ -139,12 +151,12 @@
                 "dataToSend": "autoMapInputData",
                 "options": {}
             },
-            "id": "7",
+            "id": "save-supabase",
             "name": "Save to Supabase",
             "type": "n8n-nodes-base.supabase",
             "typeVersion": 1,
             "position": [
-                1340,
+                1320,
                 400
             ],
             "credentials": {
@@ -160,26 +172,26 @@
                 "destinationFieldName": "properties",
                 "options": {}
             },
-            "id": "8",
+            "id": "aggregate",
             "name": "Aggregate Results",
             "type": "n8n-nodes-base.aggregate",
             "typeVersion": 1,
             "position": [
-                1560,
+                1540,
                 400
             ]
         },
         {
             "parameters": {
                 "respondWith": "json",
-                "responseBody": "={\n  \"success\": true,\n  \"message\": \"Property data collected successfully\",\n  \"count\": {{ $json.properties.length }},\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}"
+                "responseBody": "={\n  \"success\": true,\n  \"count\": {{ $json.properties.length }},\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}"
             },
-            "id": "9",
+            "id": "respond-webhook",
             "name": "Respond to Webhook",
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1.1,
             "position": [
-                1780,
+                1760,
                 400
             ]
         }
@@ -222,14 +234,25 @@
             "main": [
                 [
                     {
-                        "node": "AI Extract Properties",
+                        "node": "Basic LLM Chain",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "AI Extract Properties": {
+        "Google Gemini Chat Model": {
+            "ai_language_model": [
+                [
+                    {
+                        "node": "Basic LLM Chain",
+                        "type": "ai_language_model",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Basic LLM Chain": {
             "main": [
                 [
                     {
@@ -276,10 +299,5 @@
     },
     "settings": {
         "executionOrder": "v1"
-    },
-    "staticData": null,
-    "tags": [],
-    "triggerCount": 0,
-    "updatedAt": "2026-01-02T00:25:00.000Z",
-    "versionId": "1"
+    }
 }
